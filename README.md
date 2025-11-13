@@ -1,60 +1,127 @@
-# SynapseAI - Intelligent Assistant Landing PageThis is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SynapseAI
 
+A modern, full-stack AI chat application built with Next.js, TypeScript, Tailwind CSS, and Node.js. Features intelligent conversations, user authentication, and a beautiful responsive interface.
 
+## 🚀 Quick Start
 
-A modern, fully responsive landing page for SynapseAI built with Next.js, TypeScript, Tailwind CSS, and Framer Motion. Features smooth animations, glassmorphism design, and accessibility-first development.## Getting Started
+```bash
+# Clone the repository
+git clone https://github.com/MahdiGH10/SYNAPSE-AI.git
+cd SYNAPSE-AI
 
+# Install dependencies
+npm install
+cd backend && npm install && cd ..
 
+# Start development servers
+# Terminal 1 (Backend):
+cd backend && npm run dev
 
-## ✨ FeaturesFirst, run the development server:
+# Terminal 2 (Frontend):
+npm run dev
+```
 
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## ✨ Features
 
-- **Modern Design**: Clean, minimalist design with glassmorphism effects```bash
+- **🤖 AI Chat Interface**: Intelligent conversation capabilities
+- **🔐 Authentication**: Google OAuth + email/password authentication  
+- **📱 Responsive Design**: Optimized for mobile, tablet, and desktop
+- **🎨 Modern UI**: Clean design with smooth animations
+- **⚡ Real-time**: Fast, interactive user experience
+- **🔒 Secure**: JWT tokens, password hashing, email verification
+- **📊 Dashboard**: User management and analytics
 
-- **Fully Responsive**: Optimized for mobile, tablet, and desktopnpm run dev
+## 🏗️ Tech Stack
 
-- **Smooth Animations**: Powered by Framer Motion with reduced-motion support# or
+### Frontend
+- **Next.js 14** - React framework with App Router
+- **TypeScript** - Type safety and better development experience
+- **Tailwind CSS** - Utility-first CSS framework
+- **Zustand** - State management
+- **Framer Motion** - Smooth animations
 
-- **Accessibility First**: WCAG AA compliant with keyboard navigationyarn dev
+### Backend  
+- **Node.js** - JavaScript runtime
+- **Express.js** - Web application framework
+- **MongoDB** - NoSQL database
+- **Mongoose** - MongoDB ODM
+- **Passport.js** - Authentication middleware
+- **JWT** - Secure token-based authentication
 
-- **TypeScript**: Full type safety throughout the project# or
+## 📁 Project Structure
 
-- **Component-Based**: Reusable, modular React componentspnpm dev
+```
+SynapseAI/
+├── src/
+│   ├── app/              # Next.js App Router pages
+│   ├── components/       # Reusable React components
+│   ├── hooks/           # Custom React hooks  
+│   ├── lib/             # Utility functions
+│   └── store/           # State management (Zustand)
+├── backend/
+│   ├── config/          # Database & auth configuration
+│   ├── controllers/     # Route handlers
+│   ├── middleware/      # Custom middleware
+│   ├── models/          # Database models
+│   ├── routes/          # API routes
+│   └── utils/           # Helper functions
+└── public/              # Static assets
+```
 
-- **Performance Optimized**: Fast loading with Next.js optimizations# or
+## 🔧 Environment Setup
 
-bun dev
+Create `.env.local` in the root directory:
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
+```
 
-## 🎨 Design System```
+Create `backend/.env`:
+```env
+NODE_ENV=development  
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/synapseai
+JWT_SECRET=your_jwt_secret
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+```
 
+## 📚 Learn More
 
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/) - TypeScript guides and reference  
+- [Tailwind CSS](https://tailwindcss.com/docs) - utility-first CSS framework
+- [MongoDB Documentation](https://docs.mongodb.com/) - database guides and tutorials
 
-### ColorsOpen [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Deployment
 
-- **Deep Navy**: `#1E2A47` (primary background/header)
+The app is configured for easy deployment to:
 
-- **Soft Blue**: `#4F6DFF` (primary CTA/accents)You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Frontend**: Vercel, Netlify
+- **Backend**: Heroku, Railway, DigitalOcean  
+- **Database**: MongoDB Atlas
 
-- **Surface White**: `#F8FAFF` (cards, text background)
+## 🤝 Contributing
 
-- **Gradient Accent**: `linear-gradient(90deg, #5B7FFF 0%, #9E62FF 100%)`This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-- **Neutral Gray**: `#6B7280` (text)
+## 📄 License
 
-## Learn More
+This project is licensed under the MIT License.
 
-### Typography
+## 📞 Support
 
-- **Primary Font**: InterTo learn more about Next.js, take a look at the following resources:
+For support, email mahdi@synapseai.com or join our Discord community.
 
-- **Display Font**: Poppins
+---
 
-- **Font Display**: swap (for performance)- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-### Spacing
+Built with ❤️ by [MahdiGH10](https://github.com/MahdiGH10)
 
 - **Baseline**: 8pxYou can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
@@ -250,3 +317,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 ---
 
 Built with ❤️ by the SynapseAI Team
+=======
+# SYNAPSE-AI
+PROJET NEXT JS
+>>>>>>> b76cd372f74abd615f94ea5cc51ab9ed74145ef4
