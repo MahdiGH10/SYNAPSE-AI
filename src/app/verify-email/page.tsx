@@ -35,10 +35,10 @@ export default function VerifyEmailPage() {
           tokenManager.set(response.data.token);
         }
         
-        // Redirect to login after 3 seconds
+        // Redirect to chat after 2 seconds
         setTimeout(() => {
-          router.push('/login');
-        }, 3000);
+          router.push('/chat');
+        }, 2000);
       }
     } catch (err: any) {
       setStatus('error');

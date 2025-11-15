@@ -34,7 +34,7 @@ export default function LoginPage() {
       
       if (response.success) {
         tokenManager.set(response.data.token);
-        router.push('/dashboard');
+        router.push('/chat');
       }
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');

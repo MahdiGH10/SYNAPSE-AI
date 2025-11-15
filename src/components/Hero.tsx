@@ -58,31 +58,32 @@ const Hero: React.FC = () => {
     >
       {/* Background Video */}
       <div className="absolute inset-0 overflow-hidden">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover"
+        <iframe
+          src="https://player.vimeo.com/video/1137306734?background=1&autoplay=1&loop=1&byline=0&title=0&muted=1"
+          className="absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2"
           style={{
-            opacity: 0.7,
-            filter: 'brightness(0.75) contrast(1.2) saturate(1.1)',
+            width: '100vw',
+            height: '177.77vw', // 16:9 aspect ratio (100 / 56.25)
+            minHeight: '100vh',
+            minWidth: '177.77vh', // 16:9 aspect ratio
+            opacity: 0.6,
+            pointerEvents: 'none',
           }}
-        >
-          <source src="https://framerusercontent.com/assets/JJOJjt6a4FXkQggD1CfcIrMTQBs.mp4" type="video/mp4" />
-        </video>
+          frameBorder="0"
+          allow="autoplay; fullscreen; picture-in-picture"
+        />
         {/* Radial vignette for edge darkening */}
         <div 
           className="absolute inset-0"
           style={{
-            background: 'radial-gradient(circle at 50% 40%, transparent 0%, rgba(10, 14, 26, 0.4) 70%, rgba(10, 14, 26, 0.8) 100%)',
+            background: 'radial-gradient(circle at 50% 40%, transparent 0%, rgba(10, 14, 26, 0.5) 60%, rgba(10, 14, 26, 0.9) 100%)',
           }}
         />
         {/* Light center overlay for stable contrast */}
         <div 
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(180deg, rgba(10, 14, 26, 0.3) 0%, rgba(10, 14, 26, 0.5) 100%)',
+            background: 'linear-gradient(180deg, rgba(10, 14, 26, 0.4) 0%, rgba(10, 14, 26, 0.6) 100%)',
           }}
         />
       </div>
