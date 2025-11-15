@@ -4,10 +4,19 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { fadeInUp, staggerContainer } from '@/lib/animation';
+import { useTypingEffect } from '@/hooks/useTypingEffect';
 import Icon from './Icon';
 
 const Hero: React.FC = () => {
   const { scrollY } = useScroll();
+  
+  // Typing effect for dynamic headlines
+  const { text: typedText } = useTypingEffect({
+    words: ['AI Assistant', 'Productivity Tool', 'Smart Solution', 'Work Partner'],
+    typingSpeed: 150,
+    deletingSpeed: 100,
+    delayBetweenWords: 2000,
+  });
   
   // Parallax effect for mesh gradients
   const opacity = useTransform(scrollY, [0, 300], [1, 0]);
@@ -138,9 +147,17 @@ const Hero: React.FC = () => {
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
+                  minHeight: '1.2em',
+                  display: 'inline-block',
                 }}
               >
-                AI Assistant
+                {typedText}
+                <motion.span
+                  animate={{ opacity: [1, 0] }}
+                  transition={{ duration: 0.5, repeat: Infinity, repeatType: 'reverse' }}
+                  className="inline-block ml-1"
+                  style={{ width: '4px', height: '0.8em', backgroundColor: '#60A5FA' }}
+                />
               </span>
             </div>
           </motion.h1>
