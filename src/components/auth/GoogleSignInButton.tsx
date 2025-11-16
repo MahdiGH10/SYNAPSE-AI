@@ -1,12 +1,12 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { authAPI } from '@/lib/api';
+import { signIn } from 'next-auth/react';
 
 export default function GoogleSignInButton() {
   const handleGoogleSignIn = () => {
-    // Redirect to backend Google OAuth endpoint
-    window.location.href = authAPI.getGoogleAuthUrl();
+    // Use NextAuth to sign in with Google
+    signIn('google', { callbackUrl: '/api/auth/google/callback' });
   };
 
   return (

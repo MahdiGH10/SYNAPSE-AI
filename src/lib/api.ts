@@ -61,7 +61,7 @@ export const authAPI = {
   },
 
   verifyEmail: async (token: string) => {
-    return apiFetch(`/auth/verify?token=${token}`);
+    return apiFetch(`/auth/verify-email?token=${token}`);
   },
 
   resendVerification: async (email: string) => {

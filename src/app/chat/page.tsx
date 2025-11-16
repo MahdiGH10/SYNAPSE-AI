@@ -4,6 +4,8 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Send, Plus, Menu, Sparkles, Zap, Trash2, Copy, Sun, Moon, MessageSquare, Bot } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useSearchParams } from 'next/navigation';
+import { tokenManager } from '@/lib/api';
 
 interface Message {
   id: string;
@@ -20,6 +22,7 @@ interface Chat {
 }
 
 export default function ChatInterface() {
+  const searchParams = useSearchParams();
   const [chats, setChats] = useState<Chat[]>([
     {
       id: '1',
@@ -44,6 +47,16 @@ export default function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const activeChat = chats.find(c => c.id === activeChatId) || chats[0];
+
+  // Handle token from Google OAuth callback
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token) {
+      tokenManager.set(token);
+      // Remove token from URL
+      window.history.replaceState({}, '', '/chat');
+    }
+  }, [searchParams]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -235,11 +248,18 @@ export default function ChatInterface() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 px-6 py-8">
-            <div className="max-w-5xl mx-auto space-y-8">
-              {activeChat.messages.map((message) => (
-                <div key={message.id} className="group animate-fade-in">
-                  <div className="flex gap-5">
+          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 px-6 py-12">
+            <div className="max-w-[800px] mx-auto pb-32">
+              {activeChat.messages.map((message, index) => (
+                <div 
+                  key={message.id} 
+                  className="group animate-fade-in"
+                  style={{
+                    marginTop: index > 0 && activeChat.messages[index - 1].role !== message.role ? '48px' : '32px',
+                    marginBottom: '0px'
+                  }}
+                >
+                  <div className="flex gap-6">
                     <div className={`relative w-12 h-12 rounded-3xl flex items-center justify-center overflow-hidden ${
                       message.role === 'assistant'
                         ? 'bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 shadow-xl shadow-cyan-400/30'
@@ -249,7 +269,7 @@ export default function ChatInterface() {
                         {message.role === 'assistant' ? 'S' : 'U'}
                       </span>
                     </div>
-                    <div className="flex-1 max-w-4xl">
+                    <div className="flex-1">
                       <div className={`font-bold mb-2 text-sm flex items-center justify-between ${
                         message.role === 'assistant'
                           ? 'bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 bg-clip-text text-transparent'
@@ -281,7 +301,7 @@ export default function ChatInterface() {
                           ↳ {activeChat.messages.find(m => m.id === message.replyTo)?.content.slice(0, 100)}...
                         </div>
                       )}
-                      <div className={`p-5 rounded-2xl ${isDarkMode ? 'bg-white/5' : 'bg-blue-50'} backdrop-blur-md border ${isDarkMode ? 'border-white/10' : 'border-blue-200'}`}>
+                      <div className={`py-6 px-6 rounded-[20px] ${isDarkMode ? 'bg-white/5' : 'bg-blue-50'} backdrop-blur-md border ${isDarkMode ? 'border-white/10' : 'border-blue-200'}`} style={{ boxShadow: isDarkMode ? '0 0 20px rgba(6, 182, 212, 0.08)' : '0 0 10px rgba(59, 130, 246, 0.1)' }}>
                         <div className="prose prose-invert max-w-none">
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {message.content}
@@ -293,9 +313,9 @@ export default function ChatInterface() {
                 </div>
               ))}
               {isTyping && (
-                <div className="flex gap-5">
+                <div className="flex gap-5" style={{ marginTop: '24px' }}>
                   <div className="w-12 h-12 rounded-3xl bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 shadow-xl animate-pulse" />
-                  <div className="flex-1 p-5 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10">
+                  <div className="flex-1 py-4 px-5 rounded-[18px] bg-white/5 backdrop-blur-md border border-white/10">
                     <div className="flex gap-2">
                       <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                       <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -309,8 +329,8 @@ export default function ChatInterface() {
           </div>
 
           {/* Input */}
-          <div className="p-6 pb-10">
-            <div className="max-w-5xl mx-auto">
+          <div className="p-8 pb-12">
+            <div className="max-w-[800px] mx-auto">
               {replyTo && (
                 <div className="mb-3 p-3 bg-cyan-500/10 border border-cyan-400/50 rounded-xl text-sm flex justify-between">
                   <span>Réponse à : {activeChat.messages.find(m => m.id === replyTo)?.content.slice(0, 50)}...</span>
@@ -318,7 +338,7 @@ export default function ChatInterface() {
                 </div>
               )}
               <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 rounded-3xl blur-xl opacity-60 group-hover:opacity-90 transition duration-500" />
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition duration-500" />
                 <div className={`relative ${isDarkMode ? 'bg-[#1a1f2e]/80' : 'bg-white/80'} backdrop-blur-2xl rounded-3xl border ${isDarkMode ? 'border-white/20' : 'border-blue-200'} shadow-2xl`}>
                   <textarea
                     ref={textareaRef}
@@ -331,8 +351,8 @@ export default function ChatInterface() {
                       }
                     }}
                     placeholder="Pose ta question..."
-                    className={`w-full bg-transparent py-6 px-7 pr-20 ${isDarkMode ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-600'} focus:outline-none resize-none transition-all duration-300 scrollbar-thin text-lg`}
-                    style={{ minHeight: '60px', maxHeight: '200px' }}
+                    className={`w-full bg-transparent py-6 px-7 pr-24 ${isDarkMode ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-600'} focus:outline-none resize-none transition-all duration-300 scrollbar-thin text-base leading-relaxed`}
+                    style={{ minHeight: '64px', maxHeight: '200px' }}
                   />
                   <button
                     onClick={handleSend}
