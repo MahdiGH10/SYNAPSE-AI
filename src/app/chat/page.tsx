@@ -75,7 +75,7 @@ export default function ChatInterface() {
   };
 
   /* ---------- Send message ---------- */
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userMessage: Message = {
@@ -95,36 +95,122 @@ export default function ChatInterface() {
         : c
     );
     setChats(updatedChats);
+    
+    const currentInput = input;
+    const currentReplyTo = replyTo;
     setInput('');
     setReplyTo(null);
     textareaRef.current?.focus();
 
-    /* Simulate AI */
+    /* Call real API with streaming */
     setIsTyping(true);
-    setTimeout(() => {
-      const aiResponse: Message = {
+    
+    try {
+      // Get JWT token from localStorage
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Not authenticated');
+      }
+
+      // Prepare conversation history
+      const conversationHistory = activeChat.messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
+      // Call streaming API
+      const response = await fetch('/api/chat/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          message: currentInput,
+          conversationHistory,
+          model: 'synapse-creative',
+          temperature: 0.7
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'API request failed');
+      }
+
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedContent = '';
+
+      // Create AI message placeholder
+      const aiMessageId = (Date.now() + 1).toString();
+      const aiMessage: Message = {
+        id: aiMessageId,
+        role: 'assistant',
+        content: ''
+      };
+
+      setChats(prev => prev.map(c =>
+        c.id === activeChatId ? { ...c, messages: [...c.messages, aiMessage] } : c
+      ));
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') {
+                continue;
+              }
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.content) {
+                  accumulatedContent += parsed.content;
+                  
+                  // Update message in real-time
+                  setChats(prev => prev.map(c =>
+                    c.id === activeChatId
+                      ? {
+                          ...c,
+                          messages: c.messages.map(m =>
+                            m.id === aiMessageId
+                              ? { ...m, content: accumulatedContent }
+                              : m
+                          )
+                        }
+                      : c
+                  ));
+                }
+              } catch (e) {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+      }
+
+      setIsTyping(false);
+    } catch (error) {
+      console.error('Chat API error:', error);
+      setIsTyping(false);
+      
+      // Show error message
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: getAIResponse(input, replyTo ? activeChat.messages.find(m => m.id === replyTo)?.content : undefined)
+        content: `❌ Erreur: ${error instanceof Error ? error.message : 'Une erreur est survenue'}. Veuillez réessayer.`
       };
       setChats(prev => prev.map(c =>
-        c.id === activeChatId ? { ...c, messages: [...c.messages, aiResponse] } : c
+        c.id === activeChatId ? { ...c, messages: [...c.messages, errorMessage] } : c
       ));
-      setIsTyping(false);
-    }, 1500);
-  };
-
-  /* ---------- Simulated AI response ---------- */
-  const getAIResponse = (userInput: string, replyContext?: string) => {
-    const responses = [
-      `Super question ! Voici une réponse détaillée sur **${userInput}**.\n\n\`\`\`js\n// Exemple de code\nconsole.log("SynapseAI est génial !");\n\`\`\``,
-      "D'accord, analysons ça étape par étape...",
-      "Intéressant ! Laisse-moi t'expliquer avec un exemple clair.",
-      "Voici une solution optimisée en 3 étapes :\n1. ...\n2. ...\n3. ..."
-    ];
-    return replyContext
-      ? `En réponse à : "${replyContext}"\n\n${responses[Math.floor(Math.random() * responses.length)]}`
-      : responses[Math.floor(Math.random() * responses.length)];
+    }
   };
 
   /* ---------- Copy message ---------- */
