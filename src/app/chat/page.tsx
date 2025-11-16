@@ -3,8 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Plus, Menu, Sparkles, Zap, Trash2, Copy, Sun, Moon, MessageSquare, Bot } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useSearchParams } from 'next/navigation';
-import { tokenManager } from '@/lib/api';
 
 interface Message {
   id: string;
@@ -21,7 +19,6 @@ interface Chat {
 }
 
 export default function ChatInterface() {
-  const searchParams = useSearchParams();
   const [chats, setChats] = useState<Chat[]>([
     {
       id: '1',
@@ -41,16 +38,6 @@ export default function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const activeChat = chats.find(c => c.id === activeChatId) || chats[0];
   const isChatEmpty = activeChat.messages.length === 0;
-
-  // Handle token from Google OAuth callback
-  useEffect(() => {
-    const token = searchParams.get('token');
-    if (token) {
-      tokenManager.set(token);
-      // Remove token from URL
-      window.history.replaceState({}, '', '/chat');
-    }
-  }, [searchParams]);
 
   /* ---------- Auto-resize textarea ---------- */
   useEffect(() => {
@@ -237,96 +224,6 @@ export default function ChatInterface() {
             </div>
           </div>
 
-<<<<<<< HEAD
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 px-6 py-12">
-            <div className="max-w-[800px] mx-auto pb-32">
-              {activeChat.messages.map((message, index) => (
-                <div 
-                  key={message.id} 
-                  className="group animate-fade-in"
-                  style={{
-                    marginTop: index > 0 && activeChat.messages[index - 1].role !== message.role ? '48px' : '32px',
-                    marginBottom: '0px'
-                  }}
-                >
-                  <div className="flex gap-6">
-                    <div className={`relative w-12 h-12 rounded-3xl flex items-center justify-center overflow-hidden ${
-                      message.role === 'assistant'
-                        ? 'bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 shadow-xl shadow-cyan-400/30'
-                        : 'bg-gradient-to-br from-gray-600 to-gray-700 shadow-lg'
-                    }`}>
-                      <span className="text-lg font-bold text-white z-10">
-                        {message.role === 'assistant' ? 'S' : 'U'}
-                      </span>
-                    </div>
-                    <div className="flex-1">
-                      <div className={`font-bold mb-2 text-sm flex items-center justify-between ${
-                        message.role === 'assistant'
-                          ? 'bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 bg-clip-text text-transparent'
-                          : 'text-gray-400'
-                      }`}>
-                        <div className="flex items-center gap-2">
-                          {message.role === 'assistant' ? 'SynapseAI' : 'Toi'}
-                          {message.role === 'assistant' && <Sparkles size={14} className="text-cyan-400 animate-pulse" />}
-                        </div>
-                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => setReplyTo(message.id)}
-                            className="p-1.5 hover:bg-white/10 rounded-lg"
-                            title="Répondre"
-                          >
-                            <MessageSquare size={14} />
-                          </button>
-                          <button
-                            onClick={() => copyMessage(message.content)}
-                            className="p-1.5 hover:bg-white/10 rounded-lg"
-                            title="Copier"
-                          >
-                            <Copy size={14} />
-                          </button>
-                        </div>
-                      </div>
-                      {message.replyTo && (
-                        <div className="mb-3 p-3 bg-white/5 rounded-xl text-sm text-gray-400 border-l-4 border-cyan-400">
-                          ↳ {activeChat.messages.find(m => m.id === message.replyTo)?.content.slice(0, 100)}...
-                        </div>
-                      )}
-                      <div className={`py-6 px-6 rounded-[20px] ${isDarkMode ? 'bg-white/5' : 'bg-blue-50'} backdrop-blur-md border ${isDarkMode ? 'border-white/10' : 'border-blue-200'}`} style={{ boxShadow: isDarkMode ? '0 0 20px rgba(6, 182, 212, 0.08)' : '0 0 10px rgba(59, 130, 246, 0.1)' }}>
-                        <div className="prose prose-invert max-w-none">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {message.content}
-                          </ReactMarkdown>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {isTyping && (
-                <div className="flex gap-5" style={{ marginTop: '24px' }}>
-                  <div className="w-12 h-12 rounded-3xl bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 shadow-xl animate-pulse" />
-                  <div className="flex-1 py-4 px-5 rounded-[18px] bg-white/5 backdrop-blur-md border border-white/10">
-                    <div className="flex gap-2">
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
-
-          {/* Input */}
-          <div className="p-8 pb-12">
-            <div className="max-w-[800px] mx-auto">
-              {replyTo && (
-                <div className="mb-3 p-3 bg-cyan-500/10 border border-cyan-400/50 rounded-xl text-sm flex justify-between">
-                  <span>Réponse à : {activeChat.messages.find(m => m.id === replyTo)?.content.slice(0, 50)}...</span>
-                  <button onClick={() => setReplyTo(null)} className="text-cyan-400 hover:text-cyan-300">✕</button>
-=======
           {/* Scrollable container: messages + input */}
           <div className="flex-1 overflow-y-auto scrollbar-thin">
             <div className="max-w-4xl mx-auto px-4 py-6 md:px-6 md:py-8 flex flex-col min-h-full">
@@ -376,7 +273,6 @@ export default function ChatInterface() {
                       Appuyez sur <kbd className="px-2 py-1 bg-white/10 rounded">Entrée</kbd> pour envoyer
                     </p>
                   </div>
->>>>>>> 461737e335e5da27d99497ae4897b5745e374ddf
                 </div>
               ) : (
                 <>
@@ -495,39 +391,6 @@ export default function ChatInterface() {
                   </div>
                 </>
               )}
-<<<<<<< HEAD
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition duration-500" />
-                <div className={`relative ${isDarkMode ? 'bg-[#1a1f2e]/80' : 'bg-white/80'} backdrop-blur-2xl rounded-3xl border ${isDarkMode ? 'border-white/20' : 'border-blue-200'} shadow-2xl`}>
-                  <textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSend();
-                      }
-                    }}
-                    placeholder="Pose ta question..."
-                    className={`w-full bg-transparent py-6 px-7 pr-24 ${isDarkMode ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-600'} focus:outline-none resize-none transition-all duration-300 scrollbar-thin text-base leading-relaxed`}
-                    style={{ minHeight: '64px', maxHeight: '200px' }}
-                  />
-                  <button
-                    onClick={handleSend}
-                    disabled={!input.trim()}
-                    className="absolute right-4 bottom-4 p-3.5 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 hover:from-blue-500 hover:via-blue-400 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-700 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-2xl hover:scale-110 disabled:scale-100 group"
-                  >
-                    <Send size={22} className="text-white group-hover:translate-x-0.5 transition-transform" />
-                  </button>
-                </div>
-              </div>
-              <div className="text-center mt-5 text-xs font-medium text-gray-500 flex items-center justify-center gap-2">
-                <Zap size={14} className="text-cyan-400 animate-pulse" />
-                SynapseAI peut halluciner. Vérifie les infos critiques.
-              </div>
-=======
->>>>>>> 461737e335e5da27d99497ae4897b5745e374ddf
             </div>
           </div>
         </div>
