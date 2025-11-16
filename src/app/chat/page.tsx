@@ -22,7 +22,7 @@ export default function ChatInterface() {
   const [chats, setChats] = useState<Chat[]>([
     {
       id: '1',
-      title: 'Nouveau chat',
+      title: 'New chat',
       messages: [],
       timestamp: Date.now()
     }
@@ -57,7 +57,7 @@ export default function ChatInterface() {
   const createNewChat = () => {
     const newChat: Chat = {
       id: Date.now().toString(),
-      title: 'Nouveau chat',
+      title: 'New chat',
       messages: [],
       timestamp: Date.now()
     };
@@ -205,7 +205,7 @@ export default function ChatInterface() {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: `❌ Erreur: ${error instanceof Error ? error.message : 'Une erreur est survenue'}. Veuillez réessayer.`
+        content: `❌ Error: ${error instanceof Error ? error.message : 'An error occurred'}. Please try again.`
       };
       setChats(prev => prev.map(c =>
         c.id === activeChatId ? { ...c, messages: [...c.messages, errorMessage] } : c
@@ -249,7 +249,7 @@ export default function ChatInterface() {
             >
               <div className={`rounded-2xl py-4 px-6 flex items-center justify-center gap-3 ${isDarkMode ? 'bg-[#1a1f2e]/90' : 'bg-white'} group-hover:bg-opacity-80 transition-all`}>
                 <Plus size={22} className="group-hover:rotate-90 transition-all duration-300 text-blue-400" />
-                <span className="font-bold text-blue-400">NOUVEAU CHAT</span>
+                <span className="font-bold text-blue-400">NEW CHAT</span>
               </div>
             </button>
             <div className="space-y-2">
@@ -299,7 +299,7 @@ export default function ChatInterface() {
             <div className="ml-auto flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse shadow-lg shadow-cyan-400/50" />
-                <span className="text-xs font-medium text-cyan-300 hidden md:inline">En ligne</span>
+                <span className="text-xs font-medium text-cyan-300 hidden md:inline">Online</span>
               </div>
               <button
                 onClick={() => setIsDarkMode(!isDarkMode)}
@@ -312,23 +312,25 @@ export default function ChatInterface() {
 
           {/* Scrollable container: messages + input */}
           <div className="flex-1 overflow-y-auto scrollbar-thin">
-            <div className="max-w-4xl mx-auto px-4 py-6 md:px-6 md:py-8 flex flex-col min-h-full">
+            <div className="h-full flex flex-col">
               {/* Welcome screen */}
               {isChatEmpty ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center">
-                  <div className="space-y-6 max-w-2xl">
-                    <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent animate-shimmer">
-                      Sur quoi travaillez-vous ?
-                    </h2>
-                    <p className="text-lg text-gray-400">
-                      Posez une question, collez du code, ou décrivez votre projet.
-                    </p>
-                  </div>
+                <div className="flex-1 flex flex-col items-center justify-center px-4">
+                  <div className="w-full max-w-3xl mx-auto">
+                    <div className="text-center mb-12 space-y-4">
+                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 shadow-2xl shadow-cyan-400/30 mb-6">
+                        <Sparkles size={32} className="text-white animate-pulse" />
+                      </div>
+                      <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent">
+                        How can I help you?
+                      </h2>
+                      <p className="text-lg text-gray-400">
+                        Ask a question, share code, or describe your project.
+                      </p>
+                    </div>
 
-                  <div className="mt-12 w-full">
-                    <div className="relative group">
-                      <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 rounded-3xl blur-xl opacity-60 group-hover:opacity-90 transition duration-500" />
-                      <div className={`relative ${isDarkMode ? 'bg-[#1a1f2e]/80' : 'bg-white/80'} backdrop-blur-2xl rounded-3xl border ${isDarkMode ? 'border-white/20' : 'border-blue-200'} shadow-2xl`}>
+                    <div className="relative">
+                      <div className={`${isDarkMode ? 'bg-[#1a1f2e]/60' : 'bg-white/60'} backdrop-blur-xl rounded-3xl border ${isDarkMode ? 'border-white/10' : 'border-blue-200'} shadow-2xl overflow-hidden transition-all duration-300 hover:shadow-cyan-400/20`}>
                         <textarea
                           ref={textareaRef}
                           value={input}
@@ -339,89 +341,95 @@ export default function ChatInterface() {
                               handleSend();
                             }
                           }}
-                          placeholder="Posez une question..."
-                          className={`w-full bg-transparent py-4 px-5 pr-20 ${isDarkMode ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-600'} focus:outline-none resize-none transition-all duration-300 scrollbar-thin text-base md:text-lg`}
-                          style={{ minHeight: '56px', maxHeight: '160px' }}
+                          placeholder="Ask SynapseAI a question..."
+                          className={`w-full bg-transparent py-5 px-6 pr-16 ${isDarkMode ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-600'} focus:outline-none resize-none text-base md:text-lg`}
+                          style={{ minHeight: '72px', maxHeight: '200px' }}
                         />
-                        <div className="absolute right-3 bottom-3 flex gap-2">
-                          
-                          <button
-                            onClick={handleSend}
-                            disabled={!input.trim()}
-                            className="p-2.5 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 hover:from-blue-500 hover:via-blue-400 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-700 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 disabled:scale-100"
-                          >
-                            <Send size={18} className="text-white" />
-                          </button>
-                        </div>
+                        <button
+                          onClick={handleSend}
+                          disabled={!input.trim()}
+                          className="absolute right-4 bottom-4 p-3 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 hover:from-blue-500 hover:via-blue-400 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-700 disabled:opacity-50 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 disabled:scale-100 disabled:hover:shadow-lg"
+                        >
+                          <Send size={20} className="text-white" />
+                        </button>
                       </div>
+                      <p className="text-center mt-4 text-sm text-gray-500">
+                        Press <kbd className={`px-2 py-1 ${isDarkMode ? 'bg-white/10' : 'bg-gray-200'} rounded text-xs font-medium`}>Enter</kbd> to send • <kbd className={`px-2 py-1 ${isDarkMode ? 'bg-white/10' : 'bg-gray-200'} rounded text-xs font-medium`}>Shift + Enter</kbd> for new line
+                      </p>
                     </div>
-                    <p className="text-center mt-3 text-xs text-gray-500">
-                      Appuyez sur <kbd className="px-2 py-1 bg-white/10 rounded">Entrée</kbd> pour envoyer
-                    </p>
                   </div>
                 </div>
               ) : (
                 <>
                   {/* Messages */}
-                  <div className="space-y-6 flex-1">
-                    {activeChat.messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} group animate-fade-in`}
-                      >
-                        <div className={`flex gap-3 max-w-xl ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                          <div className={`relative w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ${
-                            message.role === 'assistant'
-                              ? 'bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 shadow-xl shadow-cyan-400/30'
-                              : 'bg-gradient-to-br from-gray-600 to-gray-700 shadow-lg'
-                          }`}>
-                            <span className="text-sm font-bold text-white">
-                              {message.role === 'assistant' ? 'S' : 'U'}
-                            </span>
-                          </div>
-
-                          <div className="flex-1">
-                            <div className={`font-bold text-xs mb-1.5 flex items-center gap-2 ${
-                              message.role === 'assistant'
-                                ? 'bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 bg-clip-text text-transparent'
-                                : 'text-gray-400'
-                            }`}>
-                              {message.role === 'assistant' ? 'SynapseAI' : 'Toi'}
-                              {message.role === 'assistant' && <Sparkles size={12} className="text-cyan-400 animate-pulse" />}
-                            </div>
-
-                            {message.replyTo && (
-                              <div className="mb-2 p-2 bg-white/5 rounded-lg text-xs text-gray-400 border-l-4 border-cyan-400">
-                                ↳ {activeChat.messages.find(m => m.id === message.replyTo)?.content.slice(0, 80)}...
+                  <div className="flex-1 px-4 py-8">
+                    <div className="max-w-3xl mx-auto space-y-6">
+                      {activeChat.messages.map((message) => (
+                        <div
+                          key={message.id}
+                          className="group animate-fade-in"
+                        >
+                          {message.role === 'assistant' ? (
+                            // AI Message - Left aligned with avatar
+                            <div className="flex gap-4 items-start">
+                              <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 shadow-lg shadow-cyan-400/20">
+                                <span className="text-sm font-bold text-white">S</span>
                               </div>
-                            )}
 
-                            <div className={`p-4 rounded-2xl ${isDarkMode ? 'bg-white/5' : 'bg-blue-50'} backdrop-blur-md border ${isDarkMode ? 'border-white/10' : 'border-blue-200'} shadow-sm`}>
-                              <div className="prose prose-invert max-w-none text-sm md:text-base">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                  {message.content}
-                                </ReactMarkdown>
+                              <div className="flex-1 space-y-2 min-w-0">
+                                <div className="font-semibold text-sm text-cyan-300">
+                                  SynapseAI
+                                </div>
+
+                                <div className={`prose ${isDarkMode ? 'prose-invert' : 'prose-gray'} max-w-none`}>
+                                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {message.content}
+                                  </ReactMarkdown>
+                                </div>
+
+                                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity pt-1">
+                                  <button 
+                                    onClick={() => setReplyTo(message.id)} 
+                                    className={`p-2 ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-gray-200'} rounded-lg transition-colors`}
+                                    title="Reply"
+                                  >
+                                    <MessageSquare size={16} className="text-gray-400" />
+                                  </button>
+                                  <button 
+                                    onClick={() => copyMessage(message.content)} 
+                                    className={`p-2 ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-gray-200'} rounded-lg transition-colors`}
+                                    title="Copy"
+                                  >
+                                    <Copy size={16} className="text-gray-400" />
+                                  </button>
+                                </div>
                               </div>
                             </div>
-
-                            <div className="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={() => setReplyTo(message.id)} className="p-1.5 hover:bg-white/10 rounded-lg text-xs">
-                                <MessageSquare size={14} />
-                              </button>
-                              <button onClick={() => copyMessage(message.content)} className="p-1.5 hover:bg-white/10 rounded-lg text-xs">
-                                <Copy size={14} />
-                              </button>
+                          ) : (
+                            // User Message - Right aligned in bubble
+                            <div className="flex justify-end">
+                              <div className="max-w-[80%]">
+                                {message.replyTo && (
+                                  <div className={`mb-2 p-2 ${isDarkMode ? 'bg-cyan-500/10' : 'bg-cyan-50'} rounded-lg text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} border-l-2 border-cyan-400`}>
+                                    ↳ {activeChat.messages.find(m => m.id === message.replyTo)?.content.slice(0, 60)}...
+                                  </div>
+                                )}
+                                <div className={`rounded-3xl px-5 py-3 shadow-lg ${isDarkMode ? 'bg-gradient-to-r from-blue-600/80 to-cyan-600/80' : 'bg-gradient-to-r from-blue-500 to-cyan-500'}`}>
+                                  <div className="text-white text-base whitespace-pre-wrap break-words">
+                                    {message.content}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
-                      </div>
-                    ))}
+                      ))}
 
-                    {isTyping && (
-                      <div className="flex justify-start">
-                        <div className="flex gap-3 max-w-xl">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 shadow-xl animate-pulse flex-shrink-0" />
-                          <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10">
+                      {isTyping && (
+                        <div className="flex gap-4 items-start">
+                          <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 shadow-lg animate-pulse flex-shrink-0" />
+                          <div className="flex-1">
+                            <div className="font-semibold text-sm text-cyan-300 mb-2">SynapseAI</div>
                             <div className="flex gap-2">
                               <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                               <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -429,22 +437,21 @@ export default function ChatInterface() {
                             </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                    <div ref={messagesEndRef} />
+                      )}
+                      <div ref={messagesEndRef} />
+                    </div>
                   </div>
 
-                  {/* Input – glued to the very bottom */}
-                  <div ref={inputContainerRef} className="mt-4">
-                    {replyTo && (
-                      <div className="mb-3 p-3 bg-cyan-500/10 border border-cyan-400/50 rounded-xl text-sm flex justify-between items-center">
-                        <span className="truncate">Réponse à : {activeChat.messages.find(m => m.id === replyTo)?.content.slice(0, 50)}...</span>
-                        <button onClick={() => setReplyTo(null)} className="text-cyan-400 hover:text-cyan-300 ml-2">X</button>
-                      </div>
-                    )}
-                    <div className="relative group">
-                      <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 rounded-3xl blur-xl opacity-60 group-hover:opacity-90 transition duration-500" />
-                      <div className={`relative ${isDarkMode ? 'bg-[#1a1f2e]/80' : 'bg-white/80'} backdrop-blur-2xl rounded-3xl border ${isDarkMode ? 'border-white/20' : 'border-blue-200'} shadow-2xl`}>
+                  {/* Input - Fixed at bottom */}
+                  <div ref={inputContainerRef} className="border-t border-white/10 px-4 py-6">
+                    <div className="max-w-3xl mx-auto">
+                      {replyTo && (
+                        <div className={`mb-3 p-3 ${isDarkMode ? 'bg-cyan-500/10' : 'bg-cyan-50'} border border-cyan-400/50 rounded-xl text-sm flex justify-between items-center`}>
+                          <span className="truncate">Reply to: {activeChat.messages.find(m => m.id === replyTo)?.content.slice(0, 50)}...</span>
+                          <button onClick={() => setReplyTo(null)} className="text-cyan-400 hover:text-cyan-300 ml-2 font-bold">✕</button>
+                        </div>
+                      )}
+                      <div className={`${isDarkMode ? 'bg-[#1a1f2e]/60' : 'bg-white/60'} backdrop-blur-xl rounded-3xl border ${isDarkMode ? 'border-white/10' : 'border-blue-200'} shadow-xl overflow-hidden transition-all duration-300 hover:shadow-cyan-400/20`}>
                         <textarea
                           ref={textareaRef}
                           value={input}
@@ -455,25 +462,22 @@ export default function ChatInterface() {
                               handleSend();
                             }
                           }}
-                          placeholder="Posez une question..."
-                          className={`w-full bg-transparent py-4 px-5 pr-20 ${isDarkMode ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-600'} focus:outline-none resize-none transition-all duration-300 scrollbar-thin text-base md:text-lg`}
+                          placeholder="Ask a question..."
+                          className={`w-full bg-transparent py-4 px-6 pr-16 ${isDarkMode ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-600'} focus:outline-none resize-none text-base`}
                           style={{ minHeight: '56px', maxHeight: '160px' }}
                         />
-                        <div className="absolute right-3 bottom-3 flex gap-2">
-                          
-                          <button
-                            onClick={handleSend}
-                            disabled={!input.trim()}
-                            className="p-2.5 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 hover:from-blue-500 hover:via-blue-400 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-700 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 disabled:scale-100"
-                          >
-                            <Send size={18} className="text-white" />
-                          </button>
-                        </div>
+                        <button
+                          onClick={handleSend}
+                          disabled={!input.trim()}
+                          className="absolute right-4 bottom-4 p-2.5 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 hover:from-blue-500 hover:via-blue-400 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-700 disabled:opacity-50 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 disabled:scale-100"
+                        >
+                          <Send size={18} className="text-white" />
+                        </button>
                       </div>
+                      <p className="text-center mt-3 text-xs text-gray-500 flex items-center justify-center gap-1">
+                        <Zap size={12} className="text-cyan-400" /> SynapseAI can make mistakes.
+                      </p>
                     </div>
-                    <p className="text-center mt-3 text-xs text-gray-500">
-                      <Zap size={14} className="inline text-cyan-400 animate-pulse" /> SynapseAI peut halluciner.
-                    </p>
                   </div>
                 </>
               )}

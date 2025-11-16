@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Topbar from "@/components/dashboard/Topbar";
+import { tokenManager } from "@/lib/api";
 import {
   MessageSquare,
   TrendingUp,
@@ -75,6 +77,18 @@ const recentActivity = [
 
 export default function DashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Handle token from Google OAuth callback
+  useEffect(() => {
+    const token = searchParams.get('token');
+    if (token) {
+      tokenManager.set(token);
+      // Clean URL by removing token parameter
+      router.replace('/dashboard');
+    }
+  }, [searchParams, router]);
 
   return (
     <div className="flex min-h-screen bg-[#060913]">

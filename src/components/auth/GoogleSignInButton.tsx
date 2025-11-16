@@ -4,9 +4,14 @@ import { motion } from 'framer-motion';
 import { signIn } from 'next-auth/react';
 
 export default function GoogleSignInButton() {
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     // Use NextAuth to sign in with Google
-    signIn('google', { callbackUrl: '/api/auth/google/callback' });
+    // This will redirect to Google's OAuth screen
+    // After authentication, user will be redirected to /auth/google/callback
+    await signIn('google', { 
+      callbackUrl: '/auth/google/callback',
+      redirect: true 
+    });
   };
 
   return (

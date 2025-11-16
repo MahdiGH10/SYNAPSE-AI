@@ -1,33 +1,67 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { tokenManager } from '@/lib/api';
 import { motion } from 'framer-motion';
 
 export default function GoogleCallbackPage() {
-  const searchParams = useSearchParams();
+  const { data: session, status } = useSession();
   const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    const error = searchParams.get('error');
+    const handleCallback = async () => {
+      // Wait for session to load
+      if (status === 'loading') return;
 
-    if (error) {
-      // Redirect to login with error message
-      router.push(`/auth/login?error=${encodeURIComponent(error)}`);
-      return;
-    }
+      // If no session, redirect to login
+      if (status === 'unauthenticated') {
+        router.push('/auth/login?error=authentication_failed');
+        return;
+      }
 
-    if (token) {
-      // Save token and redirect to dashboard
-      tokenManager.set(token);
-      router.push('/dashboard');
-    } else {
-      // No token, redirect to login
-      router.push('/auth/login');
-    }
-  }, [searchParams, router]);
+      // If authenticated, generate JWT token from session
+      if (status === 'authenticated' && session?.user) {
+        try {
+          // Call our backend to generate JWT token
+          const response = await fetch('/api/auth/google/callback', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: session.user.email,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to generate token');
+          }
+
+          const data = await response.json();
+          
+          if (data.token) {
+            // Store JWT token
+            tokenManager.set(data.token);
+            // Redirect to dashboard
+            router.push('/dashboard');
+          } else {
+            throw new Error('No token received');
+          }
+        } catch (err) {
+          console.error('Callback error:', err);
+          setError('Failed to complete sign in');
+          setTimeout(() => {
+            router.push('/auth/login');
+          }, 2000);
+        }
+      }
+    };
+
+    handleCallback();
+  }, [session, status, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#060913]">
@@ -36,8 +70,19 @@ export default function GoogleCallbackPage() {
         animate={{ opacity: 1 }}
         className="text-center"
       >
-        <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-        <h2 className="text-xl font-semibold text-white">Completing sign in...</h2>
+        {error ? (
+          <>
+            <div className="text-red-500 mb-4 text-xl">❌</div>
+            <h2 className="text-xl font-semibold text-white">{error}</h2>
+            <p className="text-gray-400 mt-2">Redirecting to login...</p>
+          </>
+        ) : (
+          <>
+            <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+            <h2 className="text-xl font-semibold text-white">Completing sign in...</h2>
+            <p className="text-gray-400 mt-2">Please wait...</p>
+          </>
+        )}
       </motion.div>
     </div>
   );

@@ -7,6 +7,7 @@ export interface IUser extends Document {
   password?: string;
   verified: boolean;
   googleId?: string;
+  image?: string;
   role: 'user' | 'admin';
   lastLogin?: Date;
   createdAt: Date;
@@ -43,6 +44,10 @@ const UserSchema = new mongoose.Schema<IUser>(
       default: false,
     },
     googleId: {
+      type: String,
+      default: null,
+    },
+    image: {
       type: String,
       default: null,
     },
