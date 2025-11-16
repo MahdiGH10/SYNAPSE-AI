@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     const token = generateToken(user._id.toString(), user.email);
 
     // Redirect to frontend with token
-    const redirectUrl = new URL("/chat", request.url);
+    const redirectUrl = new URL("/dashboard", request.url);
     redirectUrl.searchParams.set("token", token);
     
     return NextResponse.redirect(redirectUrl);
