@@ -1,6 +1,5 @@
 "use client";
-
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Send, Plus, Menu, Sparkles, Zap, Trash2, Copy, Sun, Moon, MessageSquare, Bot } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -26,14 +25,8 @@ export default function ChatInterface() {
   const [chats, setChats] = useState<Chat[]>([
     {
       id: '1',
-      title: 'Bienvenue chez SynapseAI',
-      messages: [
-        {
-          id: 'm1',
-          role: 'assistant',
-          content: "Hey ! Je suis ton **copilot IA**. Pose-moi une question, colle du code, ou dis-moi ce que tu veux faire !"
-        }
-      ],
+      title: 'Nouveau chat',
+      messages: [],
       timestamp: Date.now()
     }
   ]);
@@ -44,9 +37,10 @@ export default function ChatInterface() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const inputContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
   const activeChat = chats.find(c => c.id === activeChatId) || chats[0];
+  const isChatEmpty = activeChat.messages.length === 0;
 
   // Handle token from Google OAuth callback
   useEffect(() => {
@@ -58,21 +52,21 @@ export default function ChatInterface() {
     }
   }, [searchParams]);
 
-  // Auto-resize textarea
+  /* ---------- Auto-resize textarea ---------- */
   useEffect(() => {
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = 'auto';
-      textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 160)}px`;
     }
   }, [input]);
 
-  // Auto-scroll
+  /* ---------- Scroll to bottom on every message change ---------- */
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    inputContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [activeChat.messages, isTyping]);
 
-  // Nouveau chat
+  /* ---------- New chat ---------- */
   const createNewChat = () => {
     const newChat: Chat = {
       id: Date.now().toString(),
@@ -85,17 +79,15 @@ export default function ChatInterface() {
     setReplyTo(null);
   };
 
-  // Supprimer chat
+  /* ---------- Delete chat ---------- */
   const deleteChat = (id: string) => {
     if (chats.length === 1) return;
     const filtered = chats.filter(c => c.id !== id);
     setChats(filtered);
-    if (activeChatId === id) {
-      setActiveChatId(filtered[0].id);
-    }
+    if (activeChatId === id) setActiveChatId(filtered[0].id);
   };
 
-  // Envoyer message
+  /* ---------- Send message ---------- */
   const handleSend = () => {
     if (!input.trim()) return;
 
@@ -118,8 +110,9 @@ export default function ChatInterface() {
     setChats(updatedChats);
     setInput('');
     setReplyTo(null);
+    textareaRef.current?.focus();
 
-    // Simulation IA
+    /* Simulate AI */
     setIsTyping(true);
     setTimeout(() => {
       const aiResponse: Message = {
@@ -128,15 +121,13 @@ export default function ChatInterface() {
         content: getAIResponse(input, replyTo ? activeChat.messages.find(m => m.id === replyTo)?.content : undefined)
       };
       setChats(prev => prev.map(c =>
-        c.id === activeChatId
-          ? { ...c, messages: [...c.messages, aiResponse] }
-          : c
+        c.id === activeChatId ? { ...c, messages: [...c.messages, aiResponse] } : c
       ));
       setIsTyping(false);
     }, 1500);
   };
 
-  // Réponse IA simulée
+  /* ---------- Simulated AI response ---------- */
   const getAIResponse = (userInput: string, replyContext?: string) => {
     const responses = [
       `Super question ! Voici une réponse détaillée sur **${userInput}**.\n\n\`\`\`js\n// Exemple de code\nconsole.log("SynapseAI est génial !");\n\`\`\``,
@@ -149,14 +140,14 @@ export default function ChatInterface() {
       : responses[Math.floor(Math.random() * responses.length)];
   };
 
-  // Copier message
+  /* ---------- Copy message ---------- */
   const copyMessage = (content: string) => {
     navigator.clipboard.writeText(content);
   };
 
   return (
     <>
-      {/* Background animé */}
+      {/* Animated background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className={`absolute inset-0 transition-all duration-1000 ${isDarkMode ? 'bg-gradient-to-br from-[#0a0e17] via-[#0f1419] to-[#0a0e17]' : 'bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100'} animate-gradient-xy`} />
         {[...Array(5)].map((_, i) => (
@@ -188,7 +179,6 @@ export default function ChatInterface() {
                 <span className="font-bold text-blue-400">NOUVEAU CHAT</span>
               </div>
             </button>
-
             <div className="space-y-2">
               <div className={`text-xs font-bold ${isDarkMode ? 'text-cyan-300' : 'text-cyan-600'} uppercase tracking-widest flex items-center gap-2`}>
                 <MessageSquare size={14} className="animate-pulse" />
@@ -220,23 +210,23 @@ export default function ChatInterface() {
           </div>
         </div>
 
-        {/* Main */}
+        {/* Main area */}
         <div className="flex-1 flex flex-col relative">
           {/* Header */}
-          <div className={`h-16 backdrop-blur-2xl ${isDarkMode ? 'bg-gradient-to-r from-[#1a1f2e]/80 to-[#1a1f2e]/50' : 'bg-white/80'} border-b ${isDarkMode ? 'border-white/10' : 'border-blue-200'} flex items-center px-6 shadow-2xl`}>
+          <div className={`h-16 backdrop-blur-2xl ${isDarkMode ? 'bg-gradient-to-r from-[#1a1f2e]/80 to-[#1a1f2e]/50' : 'bg-white/80'} border-b ${isDarkMode ? 'border-white/10' : 'border-blue-200'} flex items-center px-4 md:px-6 shadow-2xl`}>
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="mr-4 p-3 hover:bg-white/10 rounded-2xl transition-all duration-300 group"
+              className="p-3 hover:bg-white/10 rounded-2xl transition-all duration-300 group"
             >
               <Menu size={22} className="group-hover:rotate-180 transition-transform duration-500 text-cyan-300" />
             </button>
-            <h1 className="text-2xl font-black bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 bg-clip-text text-transparent animate-shimmer">
+            <h1 className="text-xl md:text-2xl font-black bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 bg-clip-text text-transparent animate-shimmer ml-3">
               SynapseAI
             </h1>
             <div className="ml-auto flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse shadow-lg shadow-cyan-400/50" />
-                <span className="text-xs font-medium text-cyan-300">En ligne</span>
+                <span className="text-xs font-medium text-cyan-300 hidden md:inline">En ligne</span>
               </div>
               <button
                 onClick={() => setIsDarkMode(!isDarkMode)}
@@ -247,6 +237,7 @@ export default function ChatInterface() {
             </div>
           </div>
 
+<<<<<<< HEAD
           {/* Messages */}
           <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 px-6 py-12">
             <div className="max-w-[800px] mx-auto pb-32">
@@ -335,8 +326,176 @@ export default function ChatInterface() {
                 <div className="mb-3 p-3 bg-cyan-500/10 border border-cyan-400/50 rounded-xl text-sm flex justify-between">
                   <span>Réponse à : {activeChat.messages.find(m => m.id === replyTo)?.content.slice(0, 50)}...</span>
                   <button onClick={() => setReplyTo(null)} className="text-cyan-400 hover:text-cyan-300">✕</button>
+=======
+          {/* Scrollable container: messages + input */}
+          <div className="flex-1 overflow-y-auto scrollbar-thin">
+            <div className="max-w-4xl mx-auto px-4 py-6 md:px-6 md:py-8 flex flex-col min-h-full">
+              {/* Welcome screen */}
+              {isChatEmpty ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center">
+                  <div className="space-y-6 max-w-2xl">
+                    <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent animate-shimmer">
+                      Sur quoi travaillez-vous ?
+                    </h2>
+                    <p className="text-lg text-gray-400">
+                      Posez une question, collez du code, ou décrivez votre projet.
+                    </p>
+                  </div>
+
+                  <div className="mt-12 w-full">
+                    <div className="relative group">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 rounded-3xl blur-xl opacity-60 group-hover:opacity-90 transition duration-500" />
+                      <div className={`relative ${isDarkMode ? 'bg-[#1a1f2e]/80' : 'bg-white/80'} backdrop-blur-2xl rounded-3xl border ${isDarkMode ? 'border-white/20' : 'border-blue-200'} shadow-2xl`}>
+                        <textarea
+                          ref={textareaRef}
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSend();
+                            }
+                          }}
+                          placeholder="Posez une question..."
+                          className={`w-full bg-transparent py-4 px-5 pr-20 ${isDarkMode ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-600'} focus:outline-none resize-none transition-all duration-300 scrollbar-thin text-base md:text-lg`}
+                          style={{ minHeight: '56px', maxHeight: '160px' }}
+                        />
+                        <div className="absolute right-3 bottom-3 flex gap-2">
+                          
+                          <button
+                            onClick={handleSend}
+                            disabled={!input.trim()}
+                            className="p-2.5 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 hover:from-blue-500 hover:via-blue-400 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-700 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 disabled:scale-100"
+                          >
+                            <Send size={18} className="text-white" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-center mt-3 text-xs text-gray-500">
+                      Appuyez sur <kbd className="px-2 py-1 bg-white/10 rounded">Entrée</kbd> pour envoyer
+                    </p>
+                  </div>
+>>>>>>> 461737e335e5da27d99497ae4897b5745e374ddf
                 </div>
+              ) : (
+                <>
+                  {/* Messages */}
+                  <div className="space-y-6 flex-1">
+                    {activeChat.messages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'} group animate-fade-in`}
+                      >
+                        <div className={`flex gap-3 max-w-xl ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                          <div className={`relative w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 ${
+                            message.role === 'assistant'
+                              ? 'bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 shadow-xl shadow-cyan-400/30'
+                              : 'bg-gradient-to-br from-gray-600 to-gray-700 shadow-lg'
+                          }`}>
+                            <span className="text-sm font-bold text-white">
+                              {message.role === 'assistant' ? 'S' : 'U'}
+                            </span>
+                          </div>
+
+                          <div className="flex-1">
+                            <div className={`font-bold text-xs mb-1.5 flex items-center gap-2 ${
+                              message.role === 'assistant'
+                                ? 'bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 bg-clip-text text-transparent'
+                                : 'text-gray-400'
+                            }`}>
+                              {message.role === 'assistant' ? 'SynapseAI' : 'Toi'}
+                              {message.role === 'assistant' && <Sparkles size={12} className="text-cyan-400 animate-pulse" />}
+                            </div>
+
+                            {message.replyTo && (
+                              <div className="mb-2 p-2 bg-white/5 rounded-lg text-xs text-gray-400 border-l-4 border-cyan-400">
+                                ↳ {activeChat.messages.find(m => m.id === message.replyTo)?.content.slice(0, 80)}...
+                              </div>
+                            )}
+
+                            <div className={`p-4 rounded-2xl ${isDarkMode ? 'bg-white/5' : 'bg-blue-50'} backdrop-blur-md border ${isDarkMode ? 'border-white/10' : 'border-blue-200'} shadow-sm`}>
+                              <div className="prose prose-invert max-w-none text-sm md:text-base">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                  {message.content}
+                                </ReactMarkdown>
+                              </div>
+                            </div>
+
+                            <div className="flex gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={() => setReplyTo(message.id)} className="p-1.5 hover:bg-white/10 rounded-lg text-xs">
+                                <MessageSquare size={14} />
+                              </button>
+                              <button onClick={() => copyMessage(message.content)} className="p-1.5 hover:bg-white/10 rounded-lg text-xs">
+                                <Copy size={14} />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {isTyping && (
+                      <div className="flex justify-start">
+                        <div className="flex gap-3 max-w-xl">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 shadow-xl animate-pulse flex-shrink-0" />
+                          <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-md border border-white/10">
+                            <div className="flex gap-2">
+                              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                              <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                  </div>
+
+                  {/* Input – glued to the very bottom */}
+                  <div ref={inputContainerRef} className="mt-4">
+                    {replyTo && (
+                      <div className="mb-3 p-3 bg-cyan-500/10 border border-cyan-400/50 rounded-xl text-sm flex justify-between items-center">
+                        <span className="truncate">Réponse à : {activeChat.messages.find(m => m.id === replyTo)?.content.slice(0, 50)}...</span>
+                        <button onClick={() => setReplyTo(null)} className="text-cyan-400 hover:text-cyan-300 ml-2">X</button>
+                      </div>
+                    )}
+                    <div className="relative group">
+                      <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 rounded-3xl blur-xl opacity-60 group-hover:opacity-90 transition duration-500" />
+                      <div className={`relative ${isDarkMode ? 'bg-[#1a1f2e]/80' : 'bg-white/80'} backdrop-blur-2xl rounded-3xl border ${isDarkMode ? 'border-white/20' : 'border-blue-200'} shadow-2xl`}>
+                        <textarea
+                          ref={textareaRef}
+                          value={input}
+                          onChange={(e) => setInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSend();
+                            }
+                          }}
+                          placeholder="Posez une question..."
+                          className={`w-full bg-transparent py-4 px-5 pr-20 ${isDarkMode ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-600'} focus:outline-none resize-none transition-all duration-300 scrollbar-thin text-base md:text-lg`}
+                          style={{ minHeight: '56px', maxHeight: '160px' }}
+                        />
+                        <div className="absolute right-3 bottom-3 flex gap-2">
+                          
+                          <button
+                            onClick={handleSend}
+                            disabled={!input.trim()}
+                            className="p-2.5 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 hover:from-blue-500 hover:via-blue-400 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-700 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 disabled:scale-100"
+                          >
+                            <Send size={18} className="text-white" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-center mt-3 text-xs text-gray-500">
+                      <Zap size={14} className="inline text-cyan-400 animate-pulse" /> SynapseAI peut halluciner.
+                    </p>
+                  </div>
+                </>
               )}
+<<<<<<< HEAD
               <div className="relative group">
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition duration-500" />
                 <div className={`relative ${isDarkMode ? 'bg-[#1a1f2e]/80' : 'bg-white/80'} backdrop-blur-2xl rounded-3xl border ${isDarkMode ? 'border-white/20' : 'border-blue-200'} shadow-2xl`}>
@@ -367,6 +526,8 @@ export default function ChatInterface() {
                 <Zap size={14} className="text-cyan-400 animate-pulse" />
                 SynapseAI peut halluciner. Vérifie les infos critiques.
               </div>
+=======
+>>>>>>> 461737e335e5da27d99497ae4897b5745e374ddf
             </div>
           </div>
         </div>
@@ -381,6 +542,10 @@ export default function ChatInterface() {
         .animate-float { animation: float linear infinite; }
         .animate-fade-in { animation: fade-in 0.6s ease-out forwards; }
         .animate-shimmer { background-size: 200% 200%; animation: shimmer 3s linear infinite; }
+        .scrollbar-thin { scrollbar-width: thin; }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
       `}</style>
     </>
   );

@@ -161,7 +161,7 @@ export default function ChatPage() {
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 flex flex-col relative">
           {!activeConversation?.messages.length ? (
             <div className="h-full flex items-center justify-center">
               <div className="text-center max-w-md">
