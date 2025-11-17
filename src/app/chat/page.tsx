@@ -1,14 +1,26 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Plus, Menu, Sparkles, Zap, Trash2, Copy, Sun, Moon, MessageSquare, Bot } from 'lucide-react';
+import { Send, Plus, Menu, Sparkles, Zap, Trash2, Copy, Sun, Moon, MessageSquare, Bot, Upload, FileText, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 interface Message {
   id: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   content: string;
   replyTo?: string;
+  sources?: Array<{
+    doc_name: string;
+    category: string;
+    similarity: number;
+    preview: string;
+  }>;
+}
+
+interface UploadedDoc {
+  name: string;
+  category: string;
+  confidence: number;
 }
 
 interface Chat {
@@ -33,11 +45,40 @@ export default function ChatInterface() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [uploadedDocs, setUploadedDocs] = useState<UploadedDoc[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const activeChat = chats.find(c => c.id === activeChatId) || chats[0];
   const isChatEmpty = activeChat.messages.length === 0;
+
+  /* ---------- Load uploaded documents on mount ---------- */
+  useEffect(() => {
+    const loadDocs = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await fetch('/api/rag/upload', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success && data.documents) {
+          setUploadedDocs(data.documents.map((doc: any) => ({
+            name: doc.doc_name,
+            category: doc.category,
+            confidence: doc.confidence
+          })));
+        }
+      } catch (error) {
+        console.error('Failed to load documents:', error);
+      }
+    };
+    loadDocs();
+  }, []);
 
   /* ---------- Auto-resize textarea ---------- */
   useEffect(() => {
@@ -72,6 +113,53 @@ export default function ChatInterface() {
     const filtered = chats.filter(c => c.id !== id);
     setChats(filtered);
     if (activeChatId === id) setActiveChatId(filtered[0].id);
+  };
+
+  /* ---------- Upload document ---------- */
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/rag/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setUploadedDocs(prev => [...prev, {
+          name: file.name,
+          category: data.classification.category,
+          confidence: data.classification.confidence
+        }]);
+
+        // Add system message
+        const systemMsg: Message = {
+          id: Date.now().toString(),
+          role: 'system',
+          content: `📄 **${file.name}** uploaded!\n🎯 Category: **${data.classification.category}** (${(data.classification.confidence * 100).toFixed(1)}% confidence)\n\nYou can now ask questions about this document!`
+        };
+
+        setChats(prev => prev.map(c =>
+          c.id === activeChatId ? { ...c, messages: [...c.messages, systemMsg] } : c
+        ));
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   /* ---------- Send message ---------- */
@@ -112,8 +200,39 @@ export default function ChatInterface() {
         throw new Error('Not authenticated');
       }
 
+      // Check if we have uploaded documents - use RAG
+      if (uploadedDocs.length > 0) {
+        // RAG Mode: Query documents first
+        const ragResponse = await fetch('/api/rag/query', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ question: currentInput })
+        });
+
+        const ragData = await ragResponse.json();
+
+        if (ragData.success) {
+          const aiMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: ragData.answer,
+            sources: ragData.sources
+          };
+
+          setChats(prev => prev.map(c =>
+            c.id === activeChatId ? { ...c, messages: [...c.messages, aiMessage] } : c
+          ));
+          setIsTyping(false);
+          return;
+        }
+      }
+
+      // Regular chat mode (no documents)
       // Prepare conversation history
-      const conversationHistory = activeChat.messages.map(msg => ({
+      const conversationHistory = activeChat.messages.filter(m => m.role !== 'system').map(msg => ({
         role: msg.role,
         content: msg.content
       }));
@@ -329,6 +448,34 @@ export default function ChatInterface() {
                       </p>
                     </div>
 
+                    {/* Uploaded docs indicator on welcome screen */}
+                    {uploadedDocs.length > 0 && (
+                      <div className={`mb-4 p-4 ${isDarkMode ? 'bg-cyan-500/10' : 'bg-cyan-50'} border border-cyan-400/50 rounded-xl`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2 text-sm font-medium">
+                            <FileText size={18} className="text-cyan-400" />
+                            <span>{uploadedDocs.length} document{uploadedDocs.length > 1 ? 's' : ''} ready for Q&A</span>
+                          </div>
+                          <button
+                            onClick={() => setUploadedDocs([])}
+                            className="text-xs text-gray-400 hover:text-red-400 transition-colors"
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {uploadedDocs.map((doc, idx) => (
+                            <div key={idx} className={`text-xs px-3 py-1.5 rounded-lg ${isDarkMode ? 'bg-white/10' : 'bg-white'} flex items-center gap-2`}>
+                              <FileText size={12} className="text-cyan-400" />
+                              <span className="font-medium">{doc.name}</span>
+                              <span className="text-gray-500">·</span>
+                              <span className="text-cyan-400">{doc.category}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="relative">
                       <div className={`${isDarkMode ? 'bg-[#1a1f2e]/60' : 'bg-white/60'} backdrop-blur-xl rounded-3xl border ${isDarkMode ? 'border-white/10' : 'border-blue-200'} shadow-2xl overflow-hidden transition-all duration-300 hover:shadow-cyan-400/20`}>
                         <textarea
@@ -341,20 +488,49 @@ export default function ChatInterface() {
                               handleSend();
                             }
                           }}
-                          placeholder="Ask SynapseAI a question..."
-                          className={`w-full bg-transparent py-5 px-6 pr-16 ${isDarkMode ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-600'} focus:outline-none resize-none text-base md:text-lg`}
+                          placeholder={uploadedDocs.length > 0 ? "Ask about your documents..." : "Ask SynapseAI a question or upload a document..."}
+                          className={`w-full bg-transparent py-5 px-6 pr-28 ${isDarkMode ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-600'} focus:outline-none resize-none text-base md:text-lg`}
                           style={{ minHeight: '72px', maxHeight: '200px' }}
                         />
-                        <button
-                          onClick={handleSend}
-                          disabled={!input.trim()}
-                          className="absolute right-4 bottom-4 p-3 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 hover:from-blue-500 hover:via-blue-400 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-700 disabled:opacity-50 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 disabled:scale-100 disabled:hover:shadow-lg"
-                        >
-                          <Send size={20} className="text-white" />
-                        </button>
+                        <div className="absolute right-4 bottom-4 flex items-center gap-2">
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".pdf,.txt,.md,.doc,.docx"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                          />
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploading}
+                            className={`p-3 ${isDarkMode ? 'bg-white/10 hover:bg-white/20' : 'bg-gray-200 hover:bg-gray-300'} rounded-xl transition-all duration-300 hover:scale-105`}
+                            title="Upload document for RAG"
+                          >
+                            {isUploading ? (
+                              <div className="animate-spin text-cyan-400">⏳</div>
+                            ) : (
+                              <Upload size={20} className="text-cyan-400" />
+                            )}
+                          </button>
+                          <button
+                            onClick={handleSend}
+                            disabled={!input.trim()}
+                            className="p-3 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 hover:from-blue-500 hover:via-blue-400 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-700 disabled:opacity-50 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 disabled:scale-100 disabled:hover:shadow-lg"
+                          >
+                            <Send size={20} className="text-white" />
+                          </button>
+                        </div>
                       </div>
                       <p className="text-center mt-4 text-sm text-gray-500">
-                        Press <kbd className={`px-2 py-1 ${isDarkMode ? 'bg-white/10' : 'bg-gray-200'} rounded text-xs font-medium`}>Enter</kbd> to send • <kbd className={`px-2 py-1 ${isDarkMode ? 'bg-white/10' : 'bg-gray-200'} rounded text-xs font-medium`}>Shift + Enter</kbd> for new line
+                        {uploadedDocs.length > 0 ? (
+                          <span className="flex items-center justify-center gap-1">
+                            <Zap size={14} className="text-cyan-400" /> Answers powered by your documents + ML + RAG + Qwen
+                          </span>
+                        ) : (
+                          <>
+                            <Upload size={14} className="inline text-cyan-400 mr-1" />Upload documents for intelligent Q&A • Press <kbd className={`px-2 py-1 ${isDarkMode ? 'bg-white/10' : 'bg-gray-200'} rounded text-xs font-medium`}>Enter</kbd> to send
+                          </>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -369,7 +545,18 @@ export default function ChatInterface() {
                           key={message.id}
                           className="group animate-fade-in"
                         >
-                          {message.role === 'assistant' ? (
+                          {message.role === 'system' ? (
+                            // System Message - Centered notification
+                            <div className="flex justify-center">
+                              <div className={`max-w-md p-4 rounded-xl ${isDarkMode ? 'bg-cyan-500/10 border border-cyan-500/30' : 'bg-cyan-50 border border-cyan-200'}`}>
+                                <div className={`prose ${isDarkMode ? 'prose-invert' : 'prose-gray'} max-w-none text-sm`}>
+                                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                    {message.content}
+                                  </ReactMarkdown>
+                                </div>
+                              </div>
+                            </div>
+                          ) : message.role === 'assistant' ? (
                             // AI Message - Left aligned with avatar
                             <div className="flex gap-4 items-start">
                               <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 shadow-lg shadow-cyan-400/20">
@@ -386,6 +573,20 @@ export default function ChatInterface() {
                                     {message.content}
                                   </ReactMarkdown>
                                 </div>
+
+                                {/* Source citations */}
+                                {message.sources && message.sources.length > 0 && (
+                                  <div className={`mt-3 p-3 rounded-lg ${isDarkMode ? 'bg-white/5' : 'bg-gray-100'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
+                                    <div className="text-xs font-semibold text-gray-400 mb-2">📚 Sources:</div>
+                                    {message.sources.map((source, idx) => (
+                                      <div key={idx} className={`mt-2 p-2 rounded ${isDarkMode ? 'bg-white/5' : 'bg-white'} text-xs`}>
+                                        <div className="font-medium text-cyan-400">{source.doc_name}</div>
+                                        <div className="text-gray-500">{source.category} • {(source.similarity * 100).toFixed(0)}% relevant</div>
+                                        <div className="text-gray-400 italic mt-1">&quot;{source.preview.slice(0, 100)}...&quot;</div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
 
                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity pt-1">
                                   <button 
@@ -445,13 +646,41 @@ export default function ChatInterface() {
                   {/* Input - Fixed at bottom */}
                   <div ref={inputContainerRef} className="border-t border-white/10 px-4 py-6">
                     <div className="max-w-3xl mx-auto">
+                      {/* Uploaded docs indicator - chat mode */}
+                      {uploadedDocs.length > 0 && (
+                        <div className={`mb-3 p-3 ${isDarkMode ? 'bg-cyan-500/10' : 'bg-cyan-50'} border border-cyan-400/50 rounded-xl`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2 text-sm font-medium">
+                              <FileText size={16} className="text-cyan-400" />
+                              <span>{uploadedDocs.length} document{uploadedDocs.length > 1 ? 's' : ''} indexed</span>
+                            </div>
+                            <button
+                              onClick={() => setUploadedDocs([])}
+                              className="text-xs text-gray-400 hover:text-red-400 transition-colors"
+                            >
+                              Clear All
+                            </button>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {uploadedDocs.map((doc, idx) => (
+                              <div key={idx} className={`text-xs px-2 py-1 rounded-lg ${isDarkMode ? 'bg-white/10' : 'bg-white'} flex items-center gap-1.5`}>
+                                <FileText size={12} className="text-cyan-400" />
+                                <span>{doc.name}</span>
+                                <span className="text-gray-500">·</span>
+                                <span className="text-cyan-400">{doc.category}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       {replyTo && (
                         <div className={`mb-3 p-3 ${isDarkMode ? 'bg-cyan-500/10' : 'bg-cyan-50'} border border-cyan-400/50 rounded-xl text-sm flex justify-between items-center`}>
                           <span className="truncate">Reply to: {activeChat.messages.find(m => m.id === replyTo)?.content.slice(0, 50)}...</span>
                           <button onClick={() => setReplyTo(null)} className="text-cyan-400 hover:text-cyan-300 ml-2 font-bold">✕</button>
                         </div>
                       )}
-                      <div className={`${isDarkMode ? 'bg-[#1a1f2e]/60' : 'bg-white/60'} backdrop-blur-xl rounded-3xl border ${isDarkMode ? 'border-white/10' : 'border-blue-200'} shadow-xl overflow-hidden transition-all duration-300 hover:shadow-cyan-400/20`}>
+                      <div className={`relative ${isDarkMode ? 'bg-[#1a1f2e]/60' : 'bg-white/60'} backdrop-blur-xl rounded-3xl border ${isDarkMode ? 'border-white/10' : 'border-blue-200'} shadow-xl overflow-hidden transition-all duration-300 hover:shadow-cyan-400/20`}>
                         <textarea
                           ref={textareaRef}
                           value={input}
@@ -462,20 +691,41 @@ export default function ChatInterface() {
                               handleSend();
                             }
                           }}
-                          placeholder="Ask a question..."
-                          className={`w-full bg-transparent py-4 px-6 pr-16 ${isDarkMode ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-600'} focus:outline-none resize-none text-base`}
+                          placeholder={uploadedDocs.length > 0 ? "Ask about your documents..." : "Ask a question..."}
+                          className={`w-full bg-transparent py-4 px-6 pr-24 ${isDarkMode ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-600'} focus:outline-none resize-none text-base`}
                           style={{ minHeight: '56px', maxHeight: '160px' }}
                         />
-                        <button
-                          onClick={handleSend}
-                          disabled={!input.trim()}
-                          className="absolute right-4 bottom-4 p-2.5 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 hover:from-blue-500 hover:via-blue-400 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-700 disabled:opacity-50 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 disabled:scale-100"
-                        >
-                          <Send size={18} className="text-white" />
-                        </button>
+                        <div className="absolute right-4 bottom-4 flex items-center gap-2">
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".pdf,.txt,.md,.doc,.docx"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                          />
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploading}
+                            className={`p-2.5 ${isDarkMode ? 'bg-white/10 hover:bg-white/20' : 'bg-gray-200 hover:bg-gray-300'} rounded-xl transition-all duration-300`}
+                            title="Upload document"
+                          >
+                            {isUploading ? (
+                              <div className="animate-spin">⏳</div>
+                            ) : (
+                              <Upload size={18} className="text-cyan-400" />
+                            )}
+                          </button>
+                          <button
+                            onClick={handleSend}
+                            disabled={!input.trim()}
+                            className="p-2.5 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 hover:from-blue-500 hover:via-blue-400 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-700 disabled:opacity-50 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 disabled:scale-100"
+                          >
+                            <Send size={18} className="text-white" />
+                          </button>
+                        </div>
                       </div>
                       <p className="text-center mt-3 text-xs text-gray-500 flex items-center justify-center gap-1">
-                        <Zap size={12} className="text-cyan-400" /> SynapseAI can make mistakes.
+                        <Zap size={12} className="text-cyan-400" /> {uploadedDocs.length > 0 ? 'Answers powered by your documents + ML classifier + RAG + Qwen' : 'SynapseAI can make mistakes.'}
                       </p>
                     </div>
                   </div>
