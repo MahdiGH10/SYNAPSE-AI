@@ -8,9 +8,10 @@ export interface TokenPayload {
   email?: string;
 }
 
-export function generateToken(userId: string, email?: string): string {
+export function generateToken(userId: string, email?: string, name?:string): string {
   const payload: TokenPayload = { id: userId };
   if (email) payload.email = email;
+  if (name) (payload as any).name = name;
   
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: JWT_EXPIRE,

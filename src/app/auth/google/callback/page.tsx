@@ -42,6 +42,7 @@ export default function GoogleCallbackPage() {
 
           const data = await response.json();
           
+          
           if (data.token) {
             // Store JWT token
             tokenManager.set(data.token);

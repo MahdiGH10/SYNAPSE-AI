@@ -4,7 +4,7 @@ Write-Host "     SynapseAI Full Startup" -ForegroundColor Cyan
 Write-Host "================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Navigate to project directory
+# Navigate to project directory (assumes this script is inside SYNAPSE-AI or a subfolder)
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location -Path $projectRoot
 
@@ -17,20 +17,24 @@ Get-Job -ErrorAction SilentlyContinue | Remove-Job
 Write-Host ""
 Write-Host "Starting Classifier Service (port 5000)..." -ForegroundColor Cyan
 Start-Job -Name "Classifier" -ScriptBlock {
-    Set-Location "C:\Users\Xbet\Desktop\SynapseAI\python_services"
+    param($projectRoot)
+
+    Set-Location (Join-Path $projectRoot "python_services")
     $env:PYTHONDONTWRITEBYTECODE = "1"
-    .\venv\Scripts\python.exe classifier_service.py
-} | Out-Null
+    python.exe classifier_service.py
+} -ArgumentList $projectRoot | Out-Null
 
 Start-Sleep -Seconds 4
 
 # Start RAG Service (port 5001)
 Write-Host "Starting RAG Service (port 5001)..." -ForegroundColor Cyan
 Start-Job -Name "RAG" -ScriptBlock {
-    Set-Location "C:\Users\Xbet\Desktop\SynapseAI\python_services"
+    param($projectRoot)
+
+    Set-Location (Join-Path $projectRoot "python_services")
     $env:PYTHONDONTWRITEBYTECODE = "1"
-    .\venv\Scripts\python.exe rag_service.py
-} | Out-Null
+    python.exe rag_service.py
+} -ArgumentList $projectRoot | Out-Null
 
 Start-Sleep -Seconds 4
 

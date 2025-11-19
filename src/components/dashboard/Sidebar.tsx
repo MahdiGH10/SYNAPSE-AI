@@ -14,6 +14,7 @@ import {
   Crown,
 } from "lucide-react";
 import { useState } from "react";
+import { logout } from "@/hooks/UseLogout";
 
 interface SidebarProps {
   onCollapse?: (collapsed: boolean) => void;
@@ -29,6 +30,11 @@ const navigation = [
 export default function Sidebar({ onCollapse }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+
+  const username = typeof  window !== 'undefined' && localStorage.getItem('userName') || 'User';
+  const email = typeof  window !== 'undefined' && localStorage.getItem('userEmail') || 'email';
+
+  
 
   const toggleCollapse = () => {
     const newState = !collapsed;
@@ -152,10 +158,10 @@ export default function Sidebar({ onCollapse }: SidebarProps) {
             {!collapsed && (
               <>
                 <div className="flex-1 text-left">
-                  <p className="text-sm font-medium text-white">John Doe</p>
-                  <p className="text-xs text-gray-400">john@example.com</p>
+                  <p className="text-sm font-medium text-white">{username}</p>
+                  <p className="text-xs text-gray-400">{email}</p>
                 </div>
-                <LogOut className="h-5 w-5 text-gray-400" />
+                <LogOut onClick={logout} className="h-5 w-5 text-gray-400" />
               </>
             )}
           </motion.button>

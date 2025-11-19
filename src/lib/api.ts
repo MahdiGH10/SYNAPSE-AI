@@ -1,9 +1,10 @@
 // API Configuration and Utilities
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
 
 // Token management
 export const tokenManager = {
-  get: () => {
+  get: (): string | null => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('token');
     }
@@ -18,70 +19,90 @@ export const tokenManager = {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
     }
-  }
+  },
 };
 
 // API fetch wrapper with auth
-async function apiFetch(endpoint: string, options: RequestInit = {}) {
+async function apiFetch<T = any>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<T> {
   const token = tokenManager.get();
-  
+
   const config: RequestInit = {
     ...options,
     headers: {
       'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
+      ...(options.headers || {}),
     },
   };
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
-  const data = await response.json();
 
-  if (!response.ok) {
-    throw new Error(data.message || 'Something went wrong');
+  // Try to parse JSON safely
+  let data: any = null;
+  const text = await response.text();
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      // non-JSON response
+      data = text;
+    }
   }
 
-  return data;
+  if (!response.ok) {
+    const message =
+      (data && typeof data === 'object' && data.message) ||
+      response.statusText ||
+      'Something went wrong';
+    throw new Error(message);
+  }
+
+  // Only update token if backend returned a token
+  if (data && typeof data === 'object' && data.token) {
+    tokenManager.set(data.token);
+  }
+
+  return data as T;
 }
 
 // Auth API endpoints
 export const authAPI = {
-  register: async (name: string, email: string, password: string) => {
-    return apiFetch('/auth/register', {
+  register: (name: string, email: string, password: string) =>
+    apiFetch('/auth/register', {
       method: 'POST',
       body: JSON.stringify({ name, email, password }),
-    });
-  },
+    }),
 
-  login: async (email: string, password: string) => {
-    return apiFetch('/auth/login', {
+  login: (email: string, password: string) =>
+    apiFetch('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
-    });
-  },
+    }),
 
-  verifyEmail: async (token: string) => {
-    return apiFetch(`/auth/verify-email?token=${token}`);
-  },
+  verifyEmail: (token: string) =>
+    apiFetch(`/auth/verify-email?token=${encodeURIComponent(token)}`),
 
-  resendVerification: async (email: string) => {
-    return apiFetch('/auth/resend-verification', {
+  resendVerification: (email: string) =>
+    apiFetch('/auth/resend-verification', {
       method: 'POST',
       body: JSON.stringify({ email }),
-    });
-  },
+    }),
 
-  getMe: async () => {
-    return apiFetch('/auth/me');
-  },
+  getMe: () => apiFetch('/auth/me'),
 
   logout: async () => {
     tokenManager.remove();
+    // If your backend requires a token to invalidate, remove AFTER call instead
     return apiFetch('/auth/logout', { method: 'POST' });
   },
 
   // Google OAuth
   getGoogleAuthUrl: () => {
-    return `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/auth/google`;
+    const base =
+      process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
+    return `${base}/auth/google`;
   },
 };

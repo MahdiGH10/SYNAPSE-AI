@@ -39,11 +39,11 @@ export async function POST(request: NextRequest) {
       name,
       email,
       password,
-      verified: false,
+      verified: true,
     });
 
     // Generate verification token
-    const verificationToken = generateVerificationToken(user._id.toString());
+    const verificationToken = generateVerificationToken(user.id.toString());
 
     // Send verification email
     try {
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
         message: 'Registration successful! Please check your email to verify your account.',
         data: {
           user: {
-            id: user._id,
+            id: user.id,
             name: user.name,
             email: user.email,
           },

@@ -40,7 +40,7 @@ export const authOptions: NextAuthOptions = {
         } else {
           // Create new user
           existingUser = await User.create({
-            name: user.name || user.email?.split('@')[0],
+            name: user.name!,
             email: user.email,
             googleId: account?.providerAccountId,
             image: user.image,
@@ -50,7 +50,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Store user ID in the user object for JWT callback
-        user.id = existingUser._id.toString();
+        user.id = existingUser.id.toString();
         
         return true;
       } catch (error) {

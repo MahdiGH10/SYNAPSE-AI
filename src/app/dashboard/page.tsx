@@ -16,6 +16,8 @@ import {
   Calendar,
   Bot,
 } from "lucide-react";
+import {getUserFromToken} from "@/lib/decod";
+import {getUserFromSession} from "@/lib/usesession";
 
 const stats = [
   {
@@ -79,7 +81,10 @@ export default function DashboardPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
-
+  getUserFromSession();
+  //getUserFromToken();
+  
+  const name = typeof  window !== 'undefined' && localStorage.getItem('userName') ;
   // Handle token from Google OAuth callback
   useEffect(() => {
     const token = searchParams.get('token');
@@ -109,7 +114,7 @@ export default function DashboardPage() {
             className="mb-8"
           >
             <h1 className="text-3xl font-bold text-white mb-2">
-              Welcome back, John! 👋
+              Welcome back, {name}! 👋
             </h1>
             <p className="text-gray-400">
               Here's what's happening with your AI workspace today.

@@ -4,6 +4,8 @@ import "./globals.css";
 import { ToastProvider } from "@/components/ui/Toast";
 import Providers from "@/components/Providers";
 
+
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -26,7 +28,9 @@ export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>)
+
+ {
   return (
     <html lang="en">
       <body

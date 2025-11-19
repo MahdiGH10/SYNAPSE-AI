@@ -1,22 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState,useEffect } from "react";
 import { motion } from "framer-motion";
 import Sidebar from "@/components/dashboard/Sidebar";
 import Topbar from "@/components/dashboard/Topbar";
 import { Camera, Save } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 
+import { useProfile } from "@/hooks/useProfile";
+import { useSaveProfile } from "@/hooks/useSaveProfile"; // <-- added
+
 export default function ProfilePage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { showToast } = useToast();
+  const email = typeof window !== 'undefined' && localStorage.getItem('userEmail') || 'email';
+  const user = typeof window !== 'undefined' && localStorage.getItem('userName') || 'User';
+  const userId = typeof window !== 'undefined' && localStorage.getItem('userId') || ''; // <-- adjust if needed
+
+  const { bio, location, avatar, website } = useProfile();
+  const { saveProfile, isLoading, error } = useSaveProfile(); // <-- added
+
+  const data = { bio, location, avatar, website };
+
   const [formData, setFormData] = useState({
-    name: "John Doe",
-    email: "john@example.com",
-    bio: "AI enthusiast and product builder",
-    location: "San Francisco, CA",
-    website: "https://johndoe.com",
+    name: user,
+    email: email,
+    bio: data.bio,
+    location: data.location,
+    website: data.website,
   });
+
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      bio: bio,
+      location: location,
+      website: website,
+    }));
+  }, [bio, location, avatar, website, user, email]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData((prev) => ({
@@ -25,9 +46,25 @@ export default function ProfilePage() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    showToast("success", "Profile updated successfully!");
+
+    // call the API via the hook
+    const result = await saveProfile({
+      userId,                         // <-- required by your API
+      bio: formData.bio,
+      location: formData.location,
+      avatar,                         // keep current avatar from useProfile
+      website: formData.website,
+    });
+
+    if (result?.success) {
+      showToast("success", "Profile updated successfully!");
+    } else if (error) {
+      showToast("error", error);
+    } else {
+      showToast("error", "Failed to update profile");
+    }
   };
 
   return (
@@ -247,9 +284,10 @@ export default function ProfilePage() {
                       boxShadow: "0 0 30px rgba(59, 130, 246, 0.4)",
                     }}
                     whileTap={{ scale: 0.98 }}
+                    disabled={isLoading} // optional: disable while saving
                   >
                     <Save className="h-5 w-5" />
-                    Save Changes
+                    {isLoading ? "Saving..." : "Save Changes"}
                   </motion.button>
                 </div>
               </form>

@@ -33,13 +33,13 @@ export async function POST(request: NextRequest) {
     await user.save();
 
     // Generate JWT token for our app
-    const token = generateToken(user._id.toString(), user.email);
+    const token = generateToken(user.id.toString(), user.email);
 
     return NextResponse.json({ 
       success: true,
       token,
       user: {
-        id: user._id.toString(),
+        id: user.id.toString(),
         email: user.email,
         name: user.name,
         image: user.image,
