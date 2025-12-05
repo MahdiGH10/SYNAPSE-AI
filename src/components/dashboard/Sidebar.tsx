@@ -12,6 +12,7 @@ import {
   ChevronLeft,
   LogOut,
   Crown,
+  FileText,
 } from "lucide-react";
 import { useState } from "react";
 import { logout } from "@/hooks/UseLogout";
@@ -23,6 +24,7 @@ interface SidebarProps {
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Chat", href: "/chat", icon: MessageSquare },
+  {name: "exercice", href: "/exercice", icon: FileText},
   { name: "Profile", href: "/profile", icon: User },
   { name: "Settings", href: "/settings", icon: Settings },
 ];

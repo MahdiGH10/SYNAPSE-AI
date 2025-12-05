@@ -1,271 +1,264 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-export const runtime = 'nodejs';
+import { NextRequest, NextResponse } from "next/server";
+import pdfParse from "pdf-parse";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-// Do not throw at module load time — return a controlled error from the handler
-// if the key is missing. This prevents the route from crashing the server
-// when the environment variable is not set.
+const GEMINI_MODEL = "models/gemini-2.5-flash";
 
-type QuestionKind = 'qcm' | 'problemes' | 'etudes_de_cas';
+export const runtime = "nodejs";
+export const maxDuration = 60;
 
-type GeminiPart =
-  | { text: string }
-  | { inline_data: { mime_type: string; data: string } };
-
-// Extract text from a PDF buffer using `pdf-parse` (Node-friendly).
-// This avoids server-side DOM dependencies that pdfjs-dist may require.
-async function extractPdfText(buffer: ArrayBuffer | Buffer | Uint8Array): Promise<string> {
-  const pdfParseModule: any = await import('pdf-parse');
-  const pdfParse = pdfParseModule.default || pdfParseModule;
-
-  // Ensure we pass a Buffer to pdf-parse
-  const buf = buffer instanceof Buffer ? buffer : Buffer.from(buffer as any);
-  const data = await pdfParse(buf);
-  // pdf-parse exposes extracted text in `data.text`
-  return (data?.text || '').toString().trim();
-}
+type QuestionKind = "qcm" | "problemes" | "etudes_de_cas";
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
-    // Ensure API key is present at request time rather than throwing at import time
     if (!GEMINI_API_KEY) {
       return NextResponse.json(
-        {
-          error:
-            'GEMINI_API_KEY is missing in environment. Set GEMINI_API_KEY in .env.local or your environment before calling this route.',
-        },
-        { status: 500 }
+        { error: "GEMINI_API_KEY is not set" },
+        { status: 500 },
       );
     }
-    const file = formData.get('file') as unknown as File | null;
-    const type = formData.get('type') as QuestionKind | null;
-    const countStr = formData.get('count') as string | null;
 
-    if (!file || !type) {
+    const contentType = req.headers.get("content-type") || "";
+    if (!contentType.includes("multipart/form-data")) {
       return NextResponse.json(
-        { error: 'Fichier et type requis' },
-        { status: 400 }
+        { error: "Content-Type must be multipart/form-data" },
+        { status: 400 },
       );
     }
 
-    const count =
-      type === 'qcm'
-        ? Math.max(
-            1,
-            Math.min(
-              100,
-              Number.isFinite(parseInt(countStr || '', 10))
-                ? parseInt(countStr || '10', 10)
-                : 10
-            )
-          )
-        : 10;
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
+    const type = (formData.get("type") as string | null)?.toLowerCase() as
+      | QuestionKind
+      | undefined;
+    const countRaw = formData.get("count");
 
-    // Read file to ArrayBuffer and derive Uint8Array later
-    const fileArrayBuffer = await file.arrayBuffer();
-    const fileName = (file as any).name ?? 'document';
-    const rawMime = file.type || '';
-    const lowerName = fileName.toLowerCase();
+    if (!file) {
+      return NextResponse.json({ error: "Missing file" }, { status: 400 });
+    }
 
-    const inferredMime =
-      rawMime ||
-      (lowerName.endsWith('.pdf')
-        ? 'application/pdf'
-        : lowerName.endsWith('.txt')
-        ? 'text/plain'
-        : lowerName.endsWith('.png')
-        ? 'image/png'
-        : lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')
-        ? 'image/jpeg'
-        : '');
+    if (!type || !["qcm", "problemes", "etudes_de_cas"].includes(type)) {
+      return NextResponse.json(
+        { error: "Invalid type. Use 'qcm', 'problemes' or 'etudes_de_cas'." },
+        { status: 400 },
+      );
+    }
 
-    const parts: GeminiPart[] = [];
+    let count: number | undefined;
+    if (type === "qcm" && countRaw) {
+      count = Number(countRaw);
+      if (!Number.isFinite(count) || count <= 0) {
+        return NextResponse.json(
+          { error: "count must be a positive number for QCM" },
+          { status: 400 },
+        );
+      }
+    }
 
-    const prompt = `
-Tu es un assistant pédagogique expert en français.
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const fileName = file.name || "uploaded.pdf";
+    const mimeType = file.type || "";
 
-L'utilisateur a fourni un document et veut générer des exercices.
+    // PDF uniquement
+    if (
+      !fileName.toLowerCase().endsWith(".pdf") &&
+      mimeType !== "application/pdf"
+    ) {
+      return NextResponse.json(
+        { error: "Only PDF files are supported" },
+        { status: 400 },
+      );
+    }
 
-Type demandé : "${type}"
-${type === 'qcm' ? `Nombre de questions : EXACTEMENT ${count}` : ''}
+    const pdfData = await pdfParse(buffer);
+    const extractedText = pdfData.text || "";
 
-Règles strictes :
-- Lis attentivement tout le document fourni.
-- Génère du contenu éducatif clair, pertinent et professionnel.
-- Réponds UNIQUEMENT avec du JSON valide, sans aucun texte avant ou après.
+    if (!extractedText.trim()) {
+      return NextResponse.json(
+        { error: "Could not extract text from the uploaded PDF." },
+        { status: 422 },
+      );
+    }
 
-Format obligatoire selon le type :
+    const maxChars = 40_000;
+    const textForModel =
+      extractedText.length > maxChars
+        ? extractedText.slice(0, maxChars) +
+          "\n\n[Text truncated due to length.]"
+        : extractedText;
 
-${
-  type === 'qcm'
-    ? `{
+    let data;
+    switch (type) {
+      case "qcm":
+        data = await generateQCM(textForModel, count ?? 10);
+        break;
+      case "problemes":
+        data = await generateProblems(textForModel);
+        break;
+      case "etudes_de_cas":
+        data = await generateCaseStudy(textForModel);
+        break;
+    }
+
+    return NextResponse.json({ data }, { status: 200 });
+  } catch (err: any) {
+    console.error("Error in /api/gemini:", err);
+    return NextResponse.json(
+      {
+        error: "Internal server error",
+        details:
+          process.env.NODE_ENV === "development" ? String(err) : undefined,
+      },
+      { status: 500 },
+    );
+  }
+}
+
+/* --------- Gemini helpers --------- */
+
+async function callGemini(prompt: string): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
+  const body = {
+    contents: [
+      {
+        parts: [{ text: prompt }],
+      },
+    ],
+  };
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Gemini error:", res.status, text);
+    throw new Error(`Gemini API error: ${res.status} - ${text}`);
+  }
+
+  const data = (await res.json()) as any;
+
+  const text =
+    data.candidates?.[0]?.content?.parts?.[0]?.text ??
+    data.candidates?.[0]?.content?.parts
+      ?.map((p: any) => p.text)
+      .join("") ??
+    "";
+
+  if (!text) throw new Error("Empty response from Gemini");
+  return text;
+}
+
+function extractJsonFromText(text: string): any {
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf("{");
+    const end = text.lastIndexOf("}");
+    if (start !== -1 && end !== -1 && end > start) {
+      const jsonStr = text.slice(start, end + 1);
+      return JSON.parse(jsonStr);
+    }
+    console.error("Model output not JSON:", text);
+    throw new Error("Failed to parse JSON from model output");
+  }
+}
+
+/* --------- Prompts par type --------- */
+
+async function generateQCM(text: string, count: number) {
+  const prompt = `
+You are an expert teacher. The following text is course material:
+
+"""${text}"""
+
+From this text, generate exactly ${count} multiple choice questions in French.
+
+Return ONLY JSON of the form:
+
+{
   "type": "qcm",
-  "title": "QCM sur [thème du cours]",
+  "title": "Titre du quiz",
   "questionCount": ${count},
   "content": [
     {
-      "question": "Question ici ?",
-      "options": { "A": "Réponse 1", "B": "Réponse 2", "C": "Réponse 3", "D": "Réponse 4" },
+      "question": "Énoncé de la question",
+      "options": {
+        "A": "Option A",
+        "B": "Option B",
+        "C": "Option C",
+        "D": "Option D"
+      },
       "answer": "A",
-      "explanation": "Explication détaillée ici"
+      "explanation": "Brève explication de la bonne réponse"
     }
   ]
-}`
-    : type === 'problemes'
-    ? `{
+}
+No extra text, no markdown.
+`;
+
+  const raw = await callGemini(prompt);
+  return extractJsonFromText(raw);
+}
+
+async function generateProblems(text: string) {
+  const prompt = `
+You are a teacher. From the following material:
+
+"""${text}"""
+
+Generate 3 to 5 practice problems in French with detailed solutions.
+
+Return ONLY JSON of the form:
+
+{
   "type": "problemes",
-  "title": "Problèmes corrigés - [thème]",
+  "title": "Titre de la série de problèmes",
   "content": [
     {
       "problem": "Énoncé du problème",
-      "solution": "Correction complète étape par étape"
+      "solution": "Solution détaillée"
     }
   ]
-}`
-    : `{
+}
+No extra text, no markdown.
+`;
+  const raw = await callGemini(prompt);
+  return extractJsonFromText(raw);
+}
+
+async function generateCaseStudy(text: string) {
+  const prompt = `
+You are a pedagogy expert. From the following material:
+
+"""${text}"""
+
+Create one detailed case study in French with:
+- a full description of the case
+- 3 to 5 questions about the case
+- a suggested answer for each question.
+
+Return ONLY JSON of the form:
+
+{
   "type": "etudes_de_cas",
-  "title": "Étude de cas - [thème]",
+  "title": "Titre de l'étude de cas",
   "content": {
-    "case": "Description complète de l'étude de cas",
+    "case": "Description détaillée du cas",
     "questions": [
       {
-        "question": "Question liée au cas",
-        "answer": "Réponse détaillée"
+        "question": "Question sur le cas",
+        "answer": "Réponse suggérée"
       }
     ]
   }
-}`
 }
-`.trim();
-
-    parts.push({ text: prompt });
-
-    let addedAnyContent = false;
-
-    if (inferredMime === 'application/pdf' || lowerName.endsWith('.pdf')) {
-      // Some browsers or clients may send the full filesystem path in the
-      // uploaded file name. If that happens, try to read the file from disk
-      // (useful for local dev). Otherwise, fall back to the uploaded buffer.
-      let pdfBuffer: Buffer;
-      const looksLikePath = /\\|\//.test(fileName);
-      if (looksLikePath) {
-        try {
-          const fs = await import('fs');
-          // Try to read the path as provided. Use try/catch in case it doesn't exist.
-          pdfBuffer = await fs.promises.readFile(fileName as any);
-        } catch (readErr) {
-          // If reading the path failed, fall back to the uploaded buffer
-          pdfBuffer = fileArrayBuffer instanceof Buffer ? fileArrayBuffer : Buffer.from(fileArrayBuffer as any);
-        }
-      } else {
-        pdfBuffer = fileArrayBuffer instanceof Buffer ? fileArrayBuffer : Buffer.from(fileArrayBuffer as any);
-      }
-
-      const pdfText = (await extractPdfText(pdfBuffer)).trim();
-      if (!pdfText) {
-        return NextResponse.json(
-          {
-            error:
-              "Impossible d'extraire le texte du PDF. Le document semble ne pas contenir de texte (scan image).",
-          },
-          { status: 400 }
-        );
-      }
-      const MAX_CHARS = 200_000;
-      const truncated =
-        pdfText.length > MAX_CHARS ? pdfText.slice(0, MAX_CHARS) : pdfText;
-
-      parts.push({
-        text: `Texte extrait du document "${fileName}":\n\n${truncated}`,
-      });
-      addedAnyContent = true;
-    } else if (inferredMime === 'text/plain' || lowerName.endsWith('.txt')) {
-      const textContent = new TextDecoder('utf-8').decode(new Uint8Array(fileArrayBuffer));
-      const MAX_CHARS = 200_000;
-      const truncated =
-        textContent.length > MAX_CHARS
-          ? textContent.slice(0, MAX_CHARS)
-          : textContent;
-
-      parts.push({
-        text: `Texte fourni ("${fileName}"):\n\n${truncated}`,
-      });
-      addedAnyContent = true;
-    } else if (inferredMime.startsWith('image/')) {
-      const base64 = Buffer.from(fileArrayBuffer).toString('base64');
-      parts.push({
-        text: `Image fournie: "${fileName}". Analyse-la et génère les exercices au format JSON strict demandé.`,
-      });
-      parts.push({
-        inline_data: {
-          mime_type: inferredMime,
-          data: base64,
-        },
-      });
-      addedAnyContent = true;
-    }
-
-    if (!addedAnyContent) {
-      return NextResponse.json(
-        { error: 'Format non supporté. Utilisez PDF, TXT ou image.' },
-        { status: 400 }
-      );
-    }
-
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts }],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            temperature: 0.7,
-          },
-        }),
-      }
-    );
-
-    if (!geminiRes.ok) {
-      const details = await geminiRes.text();
-      console.error('Gemini error:', details);
-      return NextResponse.json(
-        { error: 'Erreur Gemini', details },
-        { status: geminiRes.status }
-      );
-    }
-
-    const data = await geminiRes.json();
-    const candidateParts: Array<{ text?: string }> =
-      data?.candidates?.[0]?.content?.parts ?? [];
-
-    let rawText = candidateParts
-      .map((p) => p?.text || '')
-      .join('\n')
-      .replace(/```json/g, '')
-      .replace(/```/g, '')
-      .trim();
-
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(rawText);
-    } catch {
-      console.error('JSON invalide reçu:', rawText);
-      return NextResponse.json(
-        { error: 'Réponse invalide de l’IA (JSON malformé)', raw: rawText },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ success: true, data: parsed }, { status: 200 });
-  } catch (e: any) {
-    console.error('Erreur serveur:', e);
-    return NextResponse.json(
-      { error: e?.message || 'Erreur interne' },
-      { status: 500 }
-    );
-  }
+No extra text, no markdown.
+`;
+  const raw = await callGemini(prompt);
+  return extractJsonFromText(raw);
 }
