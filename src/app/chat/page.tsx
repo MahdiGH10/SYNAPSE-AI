@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Plus, Menu, Sparkles, Zap, Trash2, Copy, Sun, Moon, MessageSquare, Bot, Upload, FileText, X } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import MessageRenderer from '@/components/chat/MessageRenderer';
 
 interface Message {
   id: string;
@@ -31,15 +32,9 @@ interface Chat {
 }
 
 export default function ChatInterface() {
-  const [chats, setChats] = useState<Chat[]>([
-    {
-      id: '1',
-      title: 'New chat',
-      messages: [],
-      timestamp: Date.now()
-    }
-  ]);
-  const [activeChatId, setActiveChatId] = useState('1');
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [activeChatId, setActiveChatId] = useState<string>('');
+  const [isLoadingChats, setIsLoadingChats] = useState(true);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -51,11 +46,99 @@ export default function ChatInterface() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const activeChat = chats.find(c => c.id === activeChatId) || chats[0];
-  const isChatEmpty = activeChat.messages.length === 0;
+  const activeChat = chats.find(c => c.id === activeChatId);
+  const isChatEmpty = !activeChat || activeChat.messages.length === 0;
 
-  /* ---------- Load uploaded documents on mount ---------- */
+  /* ---------- Load user's chats from database on mount ---------- */
   useEffect(() => {
+    const loadUserChats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          // If not logged in, create a default new chat
+          const newChat: Chat = {
+            id: Date.now().toString(),
+            title: 'New chat',
+            messages: [],
+            timestamp: Date.now()
+          };
+          setChats([newChat]);
+          setActiveChatId(newChat.id);
+          setIsLoadingChats(false);
+          return;
+        }
+
+        // Load chats from database
+        const response = await fetch('/api/chats/save', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        
+        if (data.success && data.data.length > 0) {
+          // Convert database chats to UI format
+          const loadedChats = data.data.map((chat: any) => ({
+            id: chat.chatId,
+            title: chat.title,
+            messages: [], // Load messages on demand
+            timestamp: new Date(chat.updatedAt).getTime(),
+          }));
+          
+          // Add "New chat" option at the beginning
+          const newChatOption: Chat = {
+            id: 'new-' + Date.now(),
+            title: 'New chat',
+            messages: [],
+            timestamp: Date.now()
+          };
+          
+          const allChats = [newChatOption, ...loadedChats];
+          setChats(allChats);
+          
+          // Load the most recent chat (first in loadedChats)
+          const mostRecentChat = loadedChats[0];
+          setActiveChatId(mostRecentChat.id);
+          
+          // Load its messages
+          const chatResponse = await fetch(`/api/chats/${mostRecentChat.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const chatData = await chatResponse.json();
+          
+          if (chatData.success) {
+            setChats(prev => prev.map(c => 
+              c.id === mostRecentChat.id 
+                ? { ...c, messages: chatData.data.messages }
+                : c
+            ));
+          }
+        } else {
+          // No saved chats, create a new one
+          const newChat: Chat = {
+            id: Date.now().toString(),
+            title: 'New chat',
+            messages: [],
+            timestamp: Date.now()
+          };
+          setChats([newChat]);
+          setActiveChatId(newChat.id);
+        }
+        
+        setIsLoadingChats(false);
+      } catch (error) {
+        console.error('Failed to load chats:', error);
+        // On error, create a default chat
+        const newChat: Chat = {
+          id: Date.now().toString(),
+          title: 'New chat',
+          messages: [],
+          timestamp: Date.now()
+        };
+        setChats([newChat]);
+        setActiveChatId(newChat.id);
+        setIsLoadingChats(false);
+      }
+    };
+
     const loadDocs = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -77,6 +160,8 @@ export default function ChatInterface() {
         console.error('Failed to load documents:', error);
       }
     };
+
+    loadUserChats();
     loadDocs();
   }, []);
 
@@ -92,12 +177,12 @@ export default function ChatInterface() {
   /* ---------- Scroll to bottom on every message change ---------- */
   useEffect(() => {
     inputContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [activeChat.messages, isTyping]);
+  }, [activeChat?.messages, isTyping]);
 
   /* ---------- New chat ---------- */
   const createNewChat = () => {
     const newChat: Chat = {
-      id: Date.now().toString(),
+      id: 'new-' + Date.now().toString(),
       title: 'New chat',
       messages: [],
       timestamp: Date.now()
@@ -108,12 +193,122 @@ export default function ChatInterface() {
   };
 
   /* ---------- Delete chat ---------- */
-  const deleteChat = (id: string) => {
-    if (chats.length === 1) return;
+  const deleteChat = async (id: string) => {
+    if (chats.length <= 1) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (token && !id.startsWith('new-')) {
+        // Delete from database (only if it's a saved chat)
+        await fetch(`/api/chats/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
+    } catch (error) {
+      console.error('Failed to delete chat from database:', error);
+    }
+    
     const filtered = chats.filter(c => c.id !== id);
-    setChats(filtered);
-    if (activeChatId === id) setActiveChatId(filtered[0].id);
+    if (filtered.length === 0) {
+      // Create a new chat if we deleted the last one
+      const newChat: Chat = {
+        id: 'new-' + Date.now().toString(),
+        title: 'New chat',
+        messages: [],
+        timestamp: Date.now()
+      };
+      setChats([newChat]);
+      setActiveChatId(newChat.id);
+    } else {
+      setChats(filtered);
+      if (activeChatId === id) {
+        setActiveChatId(filtered[0].id);
+        // Load messages if needed
+        if (filtered[0].messages.length === 0 && !filtered[0].id.startsWith('new-')) {
+          loadChatMessages(filtered[0].id);
+        }
+      }
+    }
   };
+
+  /* ---------- Load specific chat messages ---------- */
+  const loadChatMessages = async (chatId: string) => {
+    // Skip loading for new chats
+    if (chatId.startsWith('new-')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`/api/chats/${chatId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update the chat with full messages
+        setChats(prev => prev.map(c => 
+          c.id === chatId 
+            ? { ...c, messages: data.data.messages, title: data.data.title }
+            : c
+        ));
+      }
+    } catch (error) {
+      console.error('Failed to load chat messages:', error);
+    }
+  };
+
+  /* ---------- Save chat to database ---------- */
+  const saveChat = async (chat: Chat) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      
+      // Don't save empty chats
+      if (chat.messages.length === 0) return;
+      
+      // Generate a proper ID if it's a new chat
+      let chatId = chat.id;
+      if (chatId.startsWith('new-')) {
+        chatId = Date.now().toString();
+        // Update the chat ID in state
+        setChats(prev => prev.map(c => 
+          c.id === chat.id ? { ...c, id: chatId } : c
+        ));
+        if (activeChatId === chat.id) {
+          setActiveChatId(chatId);
+        }
+      }
+
+      await fetch('/api/chats/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          chatId: chatId,
+          title: chat.title,
+          messages: chat.messages,
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to save chat:', error);
+    }
+  };
+
+  /* ---------- Auto-save when chat changes ---------- */
+  useEffect(() => {
+    if (activeChat && activeChat.messages.length > 0 && !isLoadingChats) {
+      // Debounce saving to avoid too many requests
+      const timer = setTimeout(() => {
+        saveChat(activeChat);
+      }, 2000); // Save 2 seconds after last change
+
+      return () => clearTimeout(timer);
+    }
+  }, [activeChat?.messages, isLoadingChats]);
 
   /* ---------- Upload document ---------- */
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,7 +322,9 @@ export default function ChatInterface() {
       formData.append('file', file);
 
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/rag/upload', {
+      
+      // Try new multi-format endpoint first, fallback to RAG if needed
+      const response = await fetch('/api/documents/upload', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -138,25 +335,47 @@ export default function ChatInterface() {
       const data = await response.json();
 
       if (data.success) {
+        const category = data.data?.classification?.category || data.classification?.category || 'Document';
+        const confidence = data.data?.classification?.confidence || data.classification?.confidence || 0;
+        
         setUploadedDocs(prev => [...prev, {
           name: file.name,
-          category: data.classification.category,
-          confidence: data.classification.confidence
+          category: category,
+          confidence: confidence
         }]);
 
-        // Add system message
+        // Add system message with file type info
+        const fileType = file.name.split('.').pop()?.toUpperCase() || 'FILE';
         const systemMsg: Message = {
           id: Date.now().toString(),
           role: 'system',
-          content: `📄 **${file.name}** uploaded!\n🎯 Category: **${data.classification.category}** (${(data.classification.confidence * 100).toFixed(1)}% confidence)\n\nYou can now ask questions about this document!`
+          content: `📄 **${file.name}** (${fileType}) uploaded successfully!\n🎯 Category: **${category}** (${(confidence * 100).toFixed(1)}% confidence)\n📝 Extracted: ${data.data?.extractedLength || 0} characters\n\n✨ You can now ask questions about this document!`
         };
 
         setChats(prev => prev.map(c =>
           c.id === activeChatId ? { ...c, messages: [...c.messages, systemMsg] } : c
         ));
+      } else {
+        // Show error message
+        const errorMsg: Message = {
+          id: Date.now().toString(),
+          role: 'system',
+          content: `❌ Upload failed: ${data.error || 'Unknown error'}\n\n${data.message || ''}\n\nSupported formats: PDF, DOCX, TXT, PPTX (limited), Images (limited)`
+        };
+        setChats(prev => prev.map(c =>
+          c.id === activeChatId ? { ...c, messages: [...c.messages, errorMsg] } : c
+        ));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload failed:', error);
+      const errorMsg: Message = {
+        id: Date.now().toString(),
+        role: 'system',
+        content: `❌ Upload error: ${error.message || 'Network error'}\n\nPlease try again or check your connection.`
+      };
+      setChats(prev => prev.map(c =>
+        c.id === activeChatId ? { ...c, messages: [...c.messages, errorMsg] } : c
+      ));
     } finally {
       setIsUploading(false);
     }
@@ -337,6 +556,29 @@ export default function ChatInterface() {
     navigator.clipboard.writeText(content);
   };
 
+  // Show loading state while chats are loading
+  if (isLoadingChats) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-[#0a0f1e]' : 'bg-gray-50'}`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-cyan-400 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading your chats...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no active chat, show error
+  if (!activeChat) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${isDarkMode ? 'bg-[#0a0f1e]' : 'bg-gray-50'}`}>
+        <div className="text-center">
+          <p className="text-red-400">Error loading chat. Please refresh the page.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       {/* Animated background */}
@@ -379,7 +621,13 @@ export default function ChatInterface() {
               {chats.map(chat => (
                 <div
                   key={chat.id}
-                  onClick={() => setActiveChatId(chat.id)}
+                  onClick={() => {
+                    setActiveChatId(chat.id);
+                    // Load messages if this chat doesn't have them loaded yet
+                    if (chat.messages.length === 0 && !chat.id.startsWith('new-')) {
+                      loadChatMessages(chat.id);
+                    }
+                  }}
                   className={`group p-3 rounded-2xl ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-blue-50 hover:bg-blue-100'} border ${activeChatId === chat.id ? 'border-cyan-400' : isDarkMode ? 'border-white/10' : 'border-blue-200'} backdrop-blur-md transition-all duration-300 cursor-pointer flex items-center justify-between`}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -496,7 +744,7 @@ export default function ChatInterface() {
                           <input
                             ref={fileInputRef}
                             type="file"
-                            accept=".pdf,.txt,.md,.doc,.docx"
+                            accept=".pdf,.txt,.md,.doc,.docx,.pptx,image/*"
                             onChange={handleFileUpload}
                             className="hidden"
                           />
@@ -504,7 +752,7 @@ export default function ChatInterface() {
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isUploading}
                             className={`p-3 ${isDarkMode ? 'bg-white/10 hover:bg-white/20' : 'bg-gray-200 hover:bg-gray-300'} rounded-xl transition-all duration-300 hover:scale-105`}
-                            title="Upload document for RAG"
+                            title="Upload document (PDF, DOCX, PPTX, TXT, Images)"
                           >
                             {isUploading ? (
                               <div className="animate-spin text-cyan-400">⏳</div>
@@ -565,13 +813,14 @@ export default function ChatInterface() {
 
                               <div className="flex-1 space-y-2 min-w-0">
                                 <div className="font-semibold text-sm text-cyan-300">
-                                  SynapseAI
+                                  SynapseAI Student Assistant
                                 </div>
 
                                 <div className={`prose ${isDarkMode ? 'prose-invert' : 'prose-gray'} max-w-none`}>
-                                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                    {message.content}
-                                  </ReactMarkdown>
+                                  <MessageRenderer 
+                                    content={message.content}
+                                    isDarkMode={isDarkMode}
+                                  />
                                 </div>
 
                                 {/* Source citations */}
@@ -699,7 +948,7 @@ export default function ChatInterface() {
                           <input
                             ref={fileInputRef}
                             type="file"
-                            accept=".pdf,.txt,.md,.doc,.docx"
+                            accept=".pdf,.txt,.md,.doc,.docx,.pptx,image/*"
                             onChange={handleFileUpload}
                             className="hidden"
                           />
@@ -707,7 +956,7 @@ export default function ChatInterface() {
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isUploading}
                             className={`p-2.5 ${isDarkMode ? 'bg-white/10 hover:bg-white/20' : 'bg-gray-200 hover:bg-gray-300'} rounded-xl transition-all duration-300`}
-                            title="Upload document"
+                            title="Upload document (PDF, DOCX, PPTX, TXT, Images)"
                           >
                             {isUploading ? (
                               <div className="animate-spin">⏳</div>

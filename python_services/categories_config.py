@@ -1,22 +1,16 @@
 # Document Classifier Category Configuration
 #
 # This file contains the mapping between numeric predictions and category names.
-# Update the category names below to match your trained model's labels.
+# These categories match the trained doc_classifier.pkl model.
 #
 # Format: category_id = "Category Name"
 
 CATEGORIES = {
-    # Update these based on your actual document categories
-    '0': 'Business Documents',
-    '1': 'Technical Reports',
-    '2': 'Financial Analysis',  # This is what the model predicted in your screenshot
-    '3': 'Scientific Papers',
-    '4': 'Medical Records',
-    '5': 'Legal Documents',
-    '6': 'Marketing Materials',
-    '7': 'Research Papers',
-    '8': 'News Articles',
-    '9': 'Educational Content',
+    # Current model categories (AG News dataset)
+    '0': 'World',        # World news and international affairs
+    '1': 'Sports',       # Sports news and events
+    '2': 'Business',     # Business, finance, and economics
+    '3': 'Sci/Tech',     # Science and technology news
 }
 
 # Example categories for different domains:

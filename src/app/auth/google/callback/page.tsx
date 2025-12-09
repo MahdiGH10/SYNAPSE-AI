@@ -36,11 +36,12 @@ export default function GoogleCallbackPage() {
             }),
           });
 
-          if (!response.ok) {
-            throw new Error('Failed to generate token');
-          }
-
           const data = await response.json();
+
+          if (!response.ok) {
+            console.error('Token generation failed:', data);
+            throw new Error(data.error || 'Failed to generate token');
+          }
           
           
           if (data.token) {

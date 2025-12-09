@@ -48,9 +48,9 @@ function TypeSelect({
   isDarkMode: boolean;
 }) {
   const OPTIONS: { value: QuestionKind; label: string }[] = [
-    { value: "qcm", label: "QCM" },
-    { value: "problemes", label: "Problèmes corrigés" },
-    { value: "etudes_de_cas", label: "Études de cas" },
+    { value: "qcm", label: "MCQ (Multiple Choice)" },
+    { value: "problemes", label: "Solved Problems" },
+    { value: "etudes_de_cas", label: "Case Studies" },
   ];
 
   const [open, setOpen] = useState(false);
@@ -231,7 +231,7 @@ export default function Page() {
   };
 
   const handleGenerate = async () => {
-    if (!file) return setError("Veuillez sélectionner un fichier PDF");
+    if (!file) return setError("Please select a PDF file");
 
     setLoading(true);
     setError(null);
@@ -254,7 +254,7 @@ export default function Page() {
       try {
         json = JSON.parse(text);
       } catch {
-        throw new Error(`Réponse serveur non JSON: ${text.slice(0, 800)}...`);
+        throw new Error(`Non-JSON server response: ${text.slice(0, 800)}...`);
       }
 
       if (!res.ok) {
@@ -269,7 +269,7 @@ export default function Page() {
 
       setResult(json.data as GeneratedData);
     } catch (err: any) {
-      setError(err.message || "Une erreur est survenue");
+      setError(err.message || "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -310,7 +310,7 @@ export default function Page() {
           : [],
     })
       .then((res) => {
-        console.log("Exercice sauvegardé:", res);
+        console.log("Exercise saved:", res);
 
         // Robust handling: some APIs return { data: savedObject } while others return the object directly
         const savedExercice = res?.data ?? res;
@@ -333,7 +333,7 @@ export default function Page() {
         // addExerciceAtTop already scrolls the aside to top, so no need to do it again here
       })
       .catch((err) => {
-        console.error("Erreur lors de la sauvegarde de l'exercice:", err);
+        console.error("Error saving exercise:", err);
       });
   };
 
@@ -409,7 +409,7 @@ export default function Page() {
               className="flex items-center gap-3 text-cyan-300 hover:text-cyan-200 transition"
             >
               <ChevronLeft className="w-6 h-6" />
-              <span className="font-medium">Nouvelle génération</span>
+              <span className="font-medium">New Generation</span>
             </button>
           </div>
         </div>
@@ -421,7 +421,7 @@ export default function Page() {
                 {result.title}
               </h1>
               <p className="mt-4 text-lg text-gray-400">
-                {isQCM && `${computedCount} questions générées`}
+                {isQCM && `${computedCount} questions generated`}
                 {result.type === "problemes" && "Problèmes corrigés"}
                 {result.type === "etudes_de_cas" && "Étude de cas complète"}
               </p>
@@ -445,7 +445,7 @@ export default function Page() {
                         <h3 className="text-lg font-semibold text-cyan-300">
                           Question {idx + 1}
                         </h3>
-                        <span className="text-sm text-gray-500">Choisissez une réponse</span>
+                        <span className="text-sm text-gray-500">Choose an answer</span>
                       </div>
                       {/* Question text: force black in light mode */}
                       <p className={`text-lg mb-6 ${isDarkMode ? "text-white" : "text-black"}`}>
@@ -487,7 +487,7 @@ export default function Page() {
                       </div>
                       {(showExplanations[idx] || selectedAnswers[idx]) && (
                         <div className="mt-6 p-5 rounded-xl bg-cyan-500/10 border border-cyan-500/30">
-                          <p className="text-cyan-300 font-medium mb-2">Explication</p>
+                          <p className="text-cyan-300 font-medium mb-2">Explanation</p>
                           <p className={`text-sm ${isDarkMode ? "text-white" : "text-black"}`}>{item.explanation}</p>
                         </div>
                       )}
@@ -501,7 +501,7 @@ export default function Page() {
                           }
                           className="mt-4 text-sm text-cyan-400 hover:text-cyan-300"
                         >
-                          Voir l&apos;explication
+                          Show explanation
                         </button>
                       )}
                     </div>
@@ -570,7 +570,7 @@ export default function Page() {
                 onClick={save}
                 className="flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-medium transition-all hover:scale-105 shadow-xl"
               >
-                save exercice
+                Save Exercise
               </button>
 
               <button
@@ -578,7 +578,7 @@ export default function Page() {
                 className="flex items-center gap-3 px-8 py-4 rounded-2xl border border-cyan-400/60 bg-transparent hover:bg-cyan-500/10 text-cyan-300 font-medium transition-all hover:scale-105 shadow-xl"
               >
                 {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                {copied ? "Copié !" : "Copier le JSON"}
+                {copied ? "Copied!" : "Copy JSON"}
               </button>
             </div>
           </div>
@@ -595,10 +595,10 @@ export default function Page() {
             <Sparkles className="w-9 h-9 text-white animate-pulse" />
           </div>
           <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent animate-shimmer">
-            Générateur d’exercices
+            Exercise Generator
           </h1>
           <p className={`mt-4 text-lg max-w-2xl mx-auto ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
-            Crée des exercices corrigés basés sur ton cours (QCM, problèmes, études de cas) à partir d&apos;un PDF.
+            Create corrected exercises based on your course (MCQs, problems, case studies) from a PDF.
           </p>
         </div>
 
@@ -625,9 +625,9 @@ export default function Page() {
                   </div>
                   <div>
                     <p className={`text-lg font-medium ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}>
-                      {file ? file.name : "Glissez-déposez votre PDF ici"}
+                      {file ? file.name : "Drag and drop your PDF here"}
                     </p>
-                    <p className={`text-sm mt-1 ${isDarkMode ? "text-gray-500" : "text-gray-600"}`}>Seuls les fichiers PDF sont supportés</p>
+                    <p className={`text-sm mt-1 ${isDarkMode ? "text-gray-500" : "text-gray-600"}`}>Only PDF files are supported</p>
                   </div>
                 </div>
                 <input id="file-input" type="file" className="hidden" onChange={onFileInputChange} accept=".pdf" />
@@ -636,14 +636,14 @@ export default function Page() {
 
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-3">
-                <label className={`text-sm font-semibold ${isDarkMode ? "text-cyan-300" : "text-cyan-600"}`}>Type d’exercice</label>
+                <label className={`text-sm font-semibold ${isDarkMode ? "text-cyan-300" : "text-cyan-600"}`}>Exercise Type</label>
 
                 <TypeSelect value={questionType} onChange={(v) => setQuestionType(v)} isDarkMode={isDarkMode} />
               </div>
 
               {questionType === "qcm" && (
                 <div className="space-y-3">
-                  <label className={`text-sm font-semibold ${isDarkMode ? "text-cyan-300" : "text-cyan-600"}`}>Nombre de questions</label>
+                  <label className={`text-sm font-semibold ${isDarkMode ? "text-cyan-300" : "text-cyan-600"}`}>Number of Questions</label>
                   <input
                     type="number"
                     min={1}
@@ -666,7 +666,7 @@ export default function Page() {
                 className="flex-1 group relative inline-flex items-center justify-center gap-3 py-4 px-8 rounded-2xl font-bold text-white bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 hover:from-blue-600 hover:via-cyan-500 hover:to-blue-600 disabled:from-gray-700 disabled:to-gray-600 disabled:cursor-not-allowed transition-all duration-300 shadow-xl hover:shadow-cyan-400/50 hover:scale-105 disabled:scale-100"
               >
                 {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />}
-                {loading ? "Génération en cours..." : "Générer les exercices"}
+                {loading ? "Generating..." : "Generate Exercises"}
               </button>
 
               <button
@@ -676,7 +676,7 @@ export default function Page() {
                 }`}
               >
                 <RotateCw className="w-5 h-5" />
-                Réinitialiser
+                Reset
               </button>
             </div>
 
@@ -690,7 +690,7 @@ export default function Page() {
         </div>
 
         <p className={`text-center mt-8 text-xs ${isDarkMode ? "text-gray-500" : "text-gray-600"}`}>
-          Les exercices sont générés par IA à partir de votre document PDF • Résultats instantanés
+          Exercises are AI-generated from your PDF document • Instant results
         </p>
       </div>
     </main>
@@ -706,7 +706,7 @@ export default function Page() {
           <SidebarExercices ref={sidebarRef} userId={Userid} isDarkMode={isDarkMode} onNewExercice={reset} onSelectExercice={handleSelectExercice} activeExerciceId={activeExerciceId} />
         )}
 
-        <div className="flex-1 flex flex-col">{result ? <ResultView /> : <FormView />}</div>
+        <div className={`flex-1 flex flex-col ${Userid ? 'ml-80' : ''}`}>{result ? <ResultView /> : <FormView />}</div>
       </div>
 
       <style jsx>{`
