@@ -11,7 +11,7 @@ import {
   Sparkles,
   ChevronLeft,
   LogOut,
-  Crown,
+  Podcast,
   FileText,
 } from "lucide-react";
 import { useState } from "react";
@@ -25,6 +25,7 @@ const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Chat", href: "/chat", icon: MessageSquare },
   {name: "exercice", href: "/exercice", icon: FileText},
+  { name: "community", href: "Post", icon: Podcast },
   { name: "Profile", href: "/profile", icon: User },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
@@ -112,40 +113,7 @@ export default function Sidebar({ onCollapse }: SidebarProps) {
           })}
         </nav>
 
-        {/* Upgrade Card */}
-        {!collapsed && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mx-4 mb-4 rounded-xl border p-4"
-            style={{
-              background: "linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)",
-              borderColor: "rgba(59, 130, 246, 0.2)",
-            }}
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <Crown className="h-5 w-5 text-yellow-400" />
-              <h3 className="font-semibold text-white">Upgrade to Pro</h3>
-            </div>
-            <p className="text-xs text-gray-400 mb-3">
-              Unlock unlimited AI conversations and advanced features
-            </p>
-            <motion.button
-              className="w-full py-2 rounded-lg text-sm font-medium text-white"
-              style={{
-                background: "linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)",
-              }}
-              whileHover={{
-                scale: 1.02,
-                boxShadow: "0 0 20px rgba(59, 130, 246, 0.4)",
-              }}
-              whileTap={{ scale: 0.98 }}
-            >
-              Upgrade Now
-            </motion.button>
-          </motion.div>
-        )}
+
 
         {/* User Profile */}
         <div className="border-t border-white/10 p-4">

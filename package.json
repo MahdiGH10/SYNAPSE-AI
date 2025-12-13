@@ -33,6 +33,7 @@
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^16.1.0",
     "remark-gfm": "^4.0.1",
+    "streamifier": "^0.1.1",
     "tesseract.js": "^5.1.1",
     "xlsx": "^0.18.5",
     "zustand": "^5.0.8"
