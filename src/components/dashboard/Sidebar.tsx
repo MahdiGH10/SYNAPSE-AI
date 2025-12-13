@@ -34,14 +34,23 @@ export default function Sidebar({ onCollapse }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [username, setUsername] = useState('User');
   const [email, setEmail] = useState('email');
+  const [userImage, setUserImage] = useState('');
 
   useEffect(() => {
-    // Load user data from localStorage after component mounts
-    const storedUsername = localStorage.getItem('userName');
-    const storedEmail = localStorage.getItem('userEmail');
-    
-    if (storedUsername) setUsername(storedUsername);
-    if (storedEmail) setEmail(storedEmail);
+    // Fetch user data from database
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    fetch(`/api/profile?userId=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setUsername(data.data.name || 'User');
+          setEmail(data.data.email || '');
+          setUserImage(data.data.profilePicture || '');
+        }
+      })
+      .catch(err => console.error('Failed to fetch user profile:', err));
   }, []);
 
   
@@ -124,24 +133,41 @@ export default function Sidebar({ onCollapse }: SidebarProps) {
 
         {/* User Profile */}
         <div className="border-t border-white/10 p-4">
-          <motion.button
-            className="flex items-center gap-3 w-full rounded-xl p-3 hover:bg-white/5 transition-colors"
+          <motion.div
+            className="flex items-center gap-3 w-full rounded-xl p-3 hover:bg-white/5 transition-colors group cursor-pointer"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-              <User className="h-5 w-5 text-white" />
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center overflow-hidden ring-2 ring-white/10 group-hover:ring-blue-400/30 transition-all">
+              {userImage ? (
+                <img 
+                  src={userImage} 
+                  alt={username} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <User className="h-5 w-5 text-white" />
+              )}
             </div>
             {!collapsed && (
               <>
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-medium text-white">{username}</p>
-                  <p className="text-xs text-gray-400">{email}</p>
+                <div className="flex-1 text-left min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{username}</p>
+                  <p className="text-xs text-gray-400 truncate">{email}</p>
                 </div>
-                <LogOut onClick={logout} className="h-5 w-5 text-gray-400" />
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    logout();
+                  }}
+                  className="hover:bg-red-500/10 rounded-lg p-1.5 transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="h-4 w-4 text-gray-400 hover:text-red-400 transition-colors" />
+                </button>
               </>
             )}
-          </motion.button>
+          </motion.div>
         </div>
       </div>
     </motion.aside>

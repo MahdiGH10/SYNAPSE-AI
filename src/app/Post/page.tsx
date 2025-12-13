@@ -17,6 +17,7 @@ type PostType = {
   content?: string;
   file?: string | null;
   timestamp?: string | number | Date;
+  createdAt?: string | number | Date;
 };
 
 export default function PostsPage() {
@@ -32,18 +33,36 @@ export default function PostsPage() {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // helpers to read profile info from localStorage
-  const getLocalUserId = () => (typeof window !== "undefined" ? localStorage.getItem("userId") || "" : "");
-  const getLocalUserName = () => (typeof window !== "undefined" ? localStorage.getItem("userName") || "" : "");
-  const getLocalUserImage = () => (typeof window !== "undefined" ? localStorage.getItem("userImage") || "" : "");
-      useEffect(() => {
-        if (typeof window !== "undefined") {
-          const token = localStorage.getItem("token");
-          if (!token) {
-            router.replace("/login");
-          }
+  // User profile state fetched from database
+  const [userProfile, setUserProfile] = useState({ userId: "", userName: "", userImage: "" });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.replace("/login");
+      }
+    }
+  }, [router]);
+
+  // Fetch user profile from database
+  useEffect(() => {
+    const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : "";
+    if (!userId) return;
+
+    fetch(`/api/profile?userId=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setUserProfile({
+            userId: data.data.userId,
+            userName: data.data.name || "",
+            userImage: data.data.profilePicture || "",
+          });
         }
-      }, [router]);
+      })
+      .catch(err => console.error('Failed to fetch user profile:', err));
+  }, []);
 
   useEffect(() => {
     // fetch posts
@@ -85,27 +104,20 @@ export default function PostsPage() {
     try {
       setIsPosting(true);
 
-      const userId = getLocalUserId();
-      const userName = getLocalUserName();
-      const userImage = getLocalUserImage();
-
       const form = new FormData();
-      form.append("userID", userId || userName || "anonymous");
-      form.append("userName", userName || "");
-      form.append("userImage", userImage || "");
+      form.append("userID", userProfile.userId || "anonymous");
       form.append("content", content);
-      form.append("timestamp", String(Date.now()));
       if (file) form.append("file", file, file.name);
 
       // optimistic UI
       const tempPost: PostType = {
         _id: "temp-" + Date.now(),
-        userID: userId || userName || "You",
-        userName: userName || undefined,
-        userImage: userImage || undefined,
+        userID: userProfile.userId || "You",
+        userName: userProfile.userName || "You",
+        userImage: userProfile.userImage || "/default-avatar.png",
         content,
         file: file ? URL.createObjectURL(file) : null,
-        timestamp: Date.now(),
+        timestamp: new Date().toISOString(),
       };
       setPosts((p) => [tempPost, ...p]);
       resetForm();
@@ -166,7 +178,7 @@ export default function PostsPage() {
             <form onSubmit={handlePost} className="relative rounded-2xl border backdrop-blur-xl p-6 mb-6" style={{ background: "rgba(17,24,39,0.7)", borderColor: "rgba(59,130,246,0.08)" }}>
               <div className="flex items-start gap-4">
                 <img
-                  src={getLocalUserImage() || "/default-avatar.png"}
+                  src={userProfile.userImage || "/default-avatar.png"}
                   alt="avatar"
                   className="w-16 h-16 rounded-full object-cover ring-1 ring-white/10"
                 />

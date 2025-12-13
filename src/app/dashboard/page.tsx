@@ -46,9 +46,9 @@ export default function DashboardPage() {
 
   getUserFromSession();
 
-  const name = typeof window !== "undefined" && localStorage.getItem("userName");
   const userId = typeof window !== "undefined" ? localStorage.getItem("userId") || "" : "";
-
+  
+  const [userProfile, setUserProfile] = useState({ name: "", email: "", profilePicture: "" });
   const [favoriteExercices, setFavoriteExercices] = useState<ExerciceType[]>([]);
   const [loadingFav, setLoadingFav] = useState(false);
 
@@ -57,6 +57,44 @@ export default function DashboardPage() {
   // ✅ NEW: post count for this user (from /api/Post/[id])
   const [myPostsCount, setMyPostsCount] = useState<number>(0);
   const [loadingPostsCount, setLoadingPostsCount] = useState(false);
+  
+  const [totalChats, setTotalChats] = useState<number>(0);
+  const [loadingChats, setLoadingChats] = useState(false);
+
+  // Fetch user profile from database
+  useEffect(() => {
+    if (!userId) return;
+
+    fetch(`/api/profile?userId=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setUserProfile({
+            name: data.data.name || "",
+            email: data.data.email || "",
+            profilePicture: data.data.profilePicture || "",
+          });
+        }
+      })
+      .catch(err => console.error('Failed to fetch user profile:', err));
+  }, [userId]);
+
+  // Fetch total chats count
+  useEffect(() => {
+    if (!userId) return;
+    
+    setLoadingChats(true);
+    fetch(`/api/chats?userId=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setTotalChats(data.count || 0);
+        }
+      })
+      .catch(err => console.error('Failed to fetch chats:', err))
+      .finally(() => setLoadingChats(false));
+  }, [userId]);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("token");
@@ -108,10 +146,13 @@ export default function DashboardPage() {
 
               const favJson = await favRes.json().catch(() => ({ data: [] }));
               const reactions: FavorReaction[] = Array.isArray(favJson?.data) ? favJson.data : [];
-              const mine = reactions.find((r) => r.userID === userId);
+              
+              // Compare as strings since API now returns string IDs
+              const mine = reactions.find((r) => String(r.userID) === String(userId));
 
               return { ex, isFav: mine?.type === "like" };
-            } catch {
+            } catch (err) {
+              console.error('Error checking favorite for exercise:', ex._id, err);
               return { ex, isFav: false };
             }
           })
@@ -179,26 +220,36 @@ export default function DashboardPage() {
     };
   }, [userId]);
 
-  // ✅ Replace:
-  // - "Messages Today" => Total Exercises
-  // - "Avg. Response Time" => My Posts
-  const statsWithExercisesAndPosts = [
-    stats[0],
+  // Real stats from database
+  const statsWithRealData = [
+    {
+      name: "Total Conversations",
+      value: loadingChats ? "..." : String(totalChats),
+      change: totalChats > 0 ? `+${totalChats}` : "",
+      trend: "up" as const,
+      icon: MessageSquare,
+    },
     {
       name: "Total Exercises",
-      value: String(totalExercices),
-      change: "",
+      value: loadingFav ? "..." : String(totalExercices),
+      change: totalExercices > 0 ? `${totalExercices} saved` : "",
       trend: "up" as const,
       icon: Zap,
     },
     {
       name: "My Posts",
       value: loadingPostsCount ? "..." : String(myPostsCount),
-      change: "",
+      change: myPostsCount > 0 ? `${myPostsCount} shared` : "",
       trend: "up" as const,
       icon: Clock,
     },
-    stats[3],
+    {
+      name: "Favorites",
+      value: loadingFav ? "..." : String(favoriteExercices.length),
+      change: favoriteExercices.length > 0 ? `${favoriteExercices.length} liked` : "",
+      trend: "up" as const,
+      icon: TrendingUp,
+    },
   ];
 
   return (
@@ -214,19 +265,28 @@ export default function DashboardPage() {
         <div className="flex-1 overflow-y-auto p-8">
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome back, {name}! 👋</h1>
-            
+            <div className="flex items-center gap-4">
+              {userProfile.profilePicture && (
+                <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-blue-500/30">
+                  <img src={userProfile.profilePicture} alt="" className="w-full h-full object-cover" />
+                </div>
+              )}
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-1">Welcome back, {userProfile.name || 'User'}! 👋</h1>
+                <p className="text-gray-400">Here's what's happening with your account today.</p>
+              </div>
+            </div>
           </motion.div>
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {statsWithExercisesAndPosts.map((stat, index) => (
+            {statsWithRealData.map((stat, index) => (
               <motion.div
                 key={stat.name}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="rounded-2xl border backdrop-blur-xl p-6 hover:scale-105 transition-transform cursor-pointer"
+                className="rounded-2xl border backdrop-blur-xl p-6 hover:scale-[1.02] hover:border-blue-500/40 transition-all cursor-pointer group"
                 style={{
                   background: "rgba(17, 24, 39, 0.7)",
                   borderColor: "rgba(59, 130, 246, 0.2)",
@@ -234,13 +294,13 @@ export default function DashboardPage() {
               >
                 <div className="flex items-center justify-between mb-4">
                   <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center"
+                    className="w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"
                     style={{
                       background:
                         "linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%)",
                     }}
                   >
-                    <stat.icon className="h-6 w-6 text-blue-400" />
+                    <stat.icon className="h-6 w-6 text-blue-400 group-hover:text-blue-300 transition-colors" />
                   </div>
 
                   {stat.change ? (
@@ -277,9 +337,13 @@ export default function DashboardPage() {
               }}
             >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-white">Favorite Exercice</h2>
-                <button className="text-sm text-blue-400 hover:text-blue-300 transition-colors">
+                <h2 className="text-xl font-semibold text-white">Favorite Exercises</h2>
+                <button 
+                  onClick={() => router.push('/exercice')}
+                  className="text-sm text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+                >
                   View all
+                  <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
 

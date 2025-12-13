@@ -27,6 +27,7 @@ export default function CommentModal({ postId, onClose, onPosted }: Props) {
   const [loadingComments, setLoadingComments] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profiles, setProfiles] = useState<Record<string, ProfileInfo>>({});
+  const [currentUserProfile, setCurrentUserProfile] = useState<ProfileInfo>({});
   const userId = typeof window !== "undefined" ? localStorage.getItem("userId") || "" : "";
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -78,7 +79,6 @@ export default function CommentModal({ postId, onClose, onPosted }: Props) {
           if (!res.ok) return;
           const json = await res.json().catch(() => null);
           const imageUrl = json?.data?.imageUrl || json?.data?.image || undefined;
-          localStorage.setItem("userImage", imageUrl );
           const name =
             json?.data?.userName ||
             json?.data?.name ||
@@ -97,6 +97,23 @@ export default function CommentModal({ postId, onClose, onPosted }: Props) {
       setProfiles((prev) => ({ ...prev, ...newProfiles }));
     }
   };
+
+  // Fetch current user's profile from database
+  useEffect(() => {
+    if (!userId) return;
+    
+    fetch(`/api/profile?userId=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setCurrentUserProfile({
+            name: data.data.name,
+            imageUrl: data.data.profilePicture
+          });
+        }
+      })
+      .catch(err => console.error('Failed to fetch current user profile:', err));
+  }, [userId]);
 
   useEffect(() => {
     fetchComments();
@@ -221,9 +238,18 @@ export default function CommentModal({ postId, onClose, onPosted }: Props) {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-3">
-            <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write your comment..." className="w-full min-h-[120px] max-h-[220px] resize-none rounded-md p-3 bg-transparent border border-white/6 text-white placeholder-gray-500 focus:outline-none" />
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-sm font-semibold text-white overflow-hidden flex-shrink-0">
+                {currentUserProfile.imageUrl ? (
+                  <img src={currentUserProfile.imageUrl} alt={currentUserProfile.name || "You"} className="w-full h-full object-cover" />
+                ) : (
+                  renderInitials(currentUserProfile.name || userId)
+                )}
+              </div>
+              <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write your comment..." className="flex-1 min-h-[120px] max-h-[220px] resize-none rounded-md p-3 bg-transparent border border-white/6 text-white placeholder-gray-500 focus:outline-none" />
+            </div>
             <div className="flex items-center justify-between gap-3">
-              <div className="text-xs text-gray-400">Posting as {userId ? `${userId.slice(0, 8)}...` : "Guest"}</div>
+              <div className="text-xs text-gray-400">Commenting as {currentUserProfile.name || (userId ? `${userId.slice(0, 8)}...` : "Guest")}</div>
               <div className="flex items-center gap-3">
                 <button type="button" onClick={() => setContent("")} className="px-3 py-2 rounded-md text-gray-300 hover:bg-white/5 transition-colors" disabled={posting}>Clear</button>
                 <button type="submit" className="px-4 py-2 rounded-md bg-gradient-to-r from-blue-500 to-cyan-400 text-white shadow-md disabled:opacity-50" disabled={posting}>

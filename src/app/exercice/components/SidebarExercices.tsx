@@ -152,7 +152,8 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
 
                 const json = await res.json().catch(() => ({ data: [] }));
                 const data: FavorReaction[] = Array.isArray(json?.data) ? json.data : [];
-                const mine = data.find((r) => r.userID === userId);
+                // Compare as strings since API returns string IDs
+                const mine = data.find((r) => String(r.userID) === String(userId));
                 return [id, (mine?.type ?? null)] as const;
               } catch {
                 return [id, null] as const;
@@ -190,6 +191,8 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
       try {
         setSavingFavId(exerciceId);
 
+        console.log('Toggling favorite:', { exerciceId, userId, nextType });
+
         const res = await fetch(FAVOR_API, {
           method: "POST",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -200,14 +203,28 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
           }),
         });
 
+        console.log('Favor API response status:', res.status);
+
         if (!res.ok) {
-          const err = await res.json().catch(() => ({ message: "Failed" }));
-          throw new Error(err?.message || "Failed to save favorite");
+          const errorText = await res.text();
+          console.error('Favor API error response:', errorText);
+          let err;
+          try {
+            err = JSON.parse(errorText);
+          } catch {
+            err = { message: errorText || "Failed" };
+          }
+          console.error('Favor API error:', err);
+          throw new Error(err?.message || err?.error || "Failed to save favorite");
         }
+
+        const result = await res.json();
+        console.log('Favor saved successfully:', result);
       } catch (e) {
-        console.error(e);
+        console.error('Toggle favorite error:', e);
         // rollback
         setFavByExId((prev) => ({ ...prev, [exerciceId]: current }));
+        alert('Failed to save favorite. Please try again.');
       } finally {
         setSavingFavId(null);
       }

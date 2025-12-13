@@ -59,8 +59,31 @@ export async function POST(request: NextRequest) {
       userID,
       content,
       file: fileUrl, // store cloudinary URL (or undefined)
-      timestamp: timestampRaw ? new Date(Number(timestampRaw)) : new Date(),
     } as Partial<IPost>);
+
+    // Populate user data before returning
+    const populatedPost = await Post.findById(newPost._id).populate('userID', 'name email profilePicture');
+    
+    if (populatedPost) {
+      const postObj = populatedPost.toObject();
+      const user = postObj.userID as any;
+      
+      const transformedPost = {
+        ...postObj,
+        userID: user?._id || postObj.userID,
+        userName: user?.name || user?.email || 'Anonymous',
+        userImage: user?.profilePicture || '',
+      };
+      
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Post created successfully",
+          data: transformedPost,
+        },
+        { status: 201 }
+      );
+    }
 
     return NextResponse.json(
       {
@@ -79,12 +102,26 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
-    const posts = await Post.find().sort({ timestamp: -1 });
+    const posts = await Post.find().sort({ timestamp: -1 }).populate('userID', 'name email profilePicture');
+    
+    // Transform posts to include user info in the expected format
+    const transformedPosts = posts.map(post => {
+      const postObj = post.toObject();
+      const user = postObj.userID as any;
+      
+      return {
+        ...postObj,
+        userID: user?._id || postObj.userID,
+        userName: user?.name || user?.email || 'Anonymous',
+        userImage: user?.profilePicture || '',
+      };
+    });
+    
     return NextResponse.json(
       {
         success: true,
         message: "Posts fetched successfully",
-        data: posts,
+        data: transformedPosts,
       },
       { status: 200 }
     );

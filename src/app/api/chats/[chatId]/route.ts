@@ -6,7 +6,7 @@ import Chat from '@/models/Chat';
 // GET /api/chats/[chatId] - Get specific chat with full messages
 export async function GET(
   request: NextRequest,
-  { params }: { params: { chatId: string } }
+  { params }: { params: Promise<{ chatId: string }> }
 ) {
   try {
     await connectDB();
@@ -26,7 +26,7 @@ export async function GET(
     }
 
     const userId = decoded.id;
-    const { chatId } = params;
+    const { chatId } = await params;
 
     // Find chat by chatId and userId (security check)
     const chat = await Chat.findOne({ chatId, userId });
@@ -60,7 +60,7 @@ export async function GET(
 // DELETE /api/chats/[chatId] - Delete a chat
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { chatId: string } }
+  { params }: { params: Promise<{ chatId: string }> }
 ) {
   try {
     await connectDB();
@@ -80,7 +80,7 @@ export async function DELETE(
     }
 
     const userId = decoded.id;
-    const { chatId } = params;
+    const { chatId } = await params;
 
     // Delete chat (ensure user owns it)
     const result = await Chat.deleteOne({ chatId, userId });
@@ -107,7 +107,7 @@ export async function DELETE(
 // PATCH /api/chats/[chatId] - Update chat title
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { chatId: string } }
+  { params }: { params: Promise<{ chatId: string }> }
 ) {
   try {
     await connectDB();
@@ -127,7 +127,7 @@ export async function PATCH(
     }
 
     const userId = decoded.id;
-    const { chatId } = params;
+    const { chatId } = await params;
     const body = await request.json();
     const { title } = body;
 

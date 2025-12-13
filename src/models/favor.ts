@@ -17,8 +17,8 @@ const FavorSchema = new mongoose.Schema<Ifavor>(
       required: true,
     },
     Exercice: {
-      type: mongoose.Schema.Types.ObjectId, // Référence au post
-      ref: "Post",
+      type: mongoose.Schema.Types.ObjectId, // Référence à l'exercice
+      ref: "Exercice",
       required: true,
     },
     type: {
@@ -32,4 +32,4 @@ const FavorSchema = new mongoose.Schema<Ifavor>(
 
 // Exporter le modèle
 export const favor: Model<Ifavor> =
-  mongoose.models.favor || mongoose.model<Ifavor>("Favor", FavorSchema);
+  mongoose.models.Favor || mongoose.model<Ifavor>("Favor", FavorSchema);

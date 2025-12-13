@@ -11,6 +11,7 @@ type PostType = {
   content?: string;
   file?: string | null;
   timestamp?: string | number | Date;
+  createdAt?: string | number | Date;
 };
 
 type Reaction = {
@@ -20,10 +21,6 @@ type Reaction = {
   type: "like" | "dislike";
 };
 
-const getLocalUserName = () =>
-  typeof window !== "undefined" ? localStorage.getItem("userName") || "" : "";
-const getLocalUserImage = () =>
-  typeof window !== "undefined" ? localStorage.getItem("userImage") || "" : "";
 const getLocalUserId = () =>
   typeof window !== "undefined" ? localStorage.getItem("userId") || "" : "";
 
@@ -44,26 +41,26 @@ function isVideo(url?: string | null) {
 
 function formatTimestamp(ts?: string | number | Date) {
   if (!ts) return "";
-  const d = new Date(ts);
-  return d.toLocaleString();
+  try {
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return "";
+    return d.toLocaleString();
+  } catch {
+    return "";
+  }
 }
 
 export default function PostCard({ post }: { post: PostType }) {
   // current user (viewer)
   const viewerId = getLocalUserId() || "";
 
-  // fallback values from localStorage (current user)
-  const fallbackImg = getLocalUserImage();
-  const fallbackName = getLocalUserName() || "Anonymous";
-  const fallbackId = viewerId;
-
-  // local state for author display name + avatar
+  // local state for author display name + avatar (use post data directly from database)
   const [authorName, setAuthorName] = useState<string | undefined>(() => {
     if (post.userName && !isLikelyObjectId(post.userName)) return post.userName;
     return undefined;
   });
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>(() => post.userImage || undefined);
-  const userId = post.userID || fallbackId;
+  const userId = post.userID || "";
   const fileUrl = post.file || null;
 
   const [showCommentModal, setShowCommentModal] = useState(false);
@@ -275,10 +272,10 @@ export default function PostCard({ post }: { post: PostType }) {
     }
   };
 
-  // Final values used for rendering
+  // Final values used for rendering (use data from post, which comes from database)
   const displayName =
-    authorName || (post.userName && !isLikelyObjectId(post.userName) ? post.userName : fallbackName);
-  const displayAvatar = avatarUrl || fallbackImg || "/default-avatar.png";
+    authorName || (post.userName && !isLikelyObjectId(post.userName) ? post.userName : "Anonymous");
+  const displayAvatar = avatarUrl || "/default-avatar.png";
 
   const handleCopy = async () => {
     try {
@@ -294,16 +291,18 @@ export default function PostCard({ post }: { post: PostType }) {
     <>
       <article className="rounded-2xl p-5 border shadow-sm hover:shadow-md transition-shadow bg-white/5 border-white/5">
         <header className="flex items-center gap-4 mb-3">
-          <img
-            src={displayAvatar}
-            alt="avatar"
-            className="w-12 h-12 rounded-full object-cover ring-1 ring-white/10"
-          />
+          <div className="w-12 h-12 rounded-full overflow-hidden ring-1 ring-white/10 flex-shrink-0">
+            <img
+              src={displayAvatar}
+              alt=""
+              className="w-full h-full object-cover"
+            />
+          </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-semibold">{displayName}</div>
-                <div className="text-xs text-gray-400">{formatTimestamp(post.timestamp)}</div>
+                <div className="text-xs text-gray-400">{formatTimestamp(post.createdAt || post.timestamp)}</div>
               </div>
             </div>
           </div>

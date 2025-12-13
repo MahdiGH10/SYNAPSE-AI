@@ -981,7 +981,7 @@ export default function ChatInterface() {
                                   <div className={`mt-3 p-3 rounded-lg ${isDarkMode ? 'bg-white/5' : 'bg-gray-100'} border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}>
                                     <div className="text-xs font-semibold text-gray-400 mb-2">📚 Sources:</div>
                                     {message.sources.map((source, idx) => (
-                                      <div key={idx} className={`mt-2 p-2 rounded ${isDarkMode ? 'bg-white/5' : 'bg-white'} text-xs`}>
+                                      <div key={`${message.id}-source-${idx}`} className={`mt-2 p-2 rounded ${isDarkMode ? 'bg-white/5' : 'bg-white'} text-xs`}>
                                         <div className="font-medium text-cyan-400">{source.doc_name}</div>
                                         <div className="text-gray-500">{source.category} • {(source.similarity * 100).toFixed(0)}% relevant</div>
                                         <div className="text-gray-400 italic mt-1">&quot;{source.preview.slice(0, 100)}...&quot;</div>
@@ -1023,7 +1023,7 @@ export default function ChatInterface() {
                                   <div className="mb-2 space-y-1.5">
                                     {message.attachments.map((file, idx) => (
                                       <div 
-                                        key={idx}
+                                        key={`${message.id}-attachment-${idx}`}
                                         className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
                                           isDarkMode 
                                             ? 'bg-white/10 border border-white/20' 
@@ -1115,7 +1115,7 @@ export default function ChatInterface() {
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {uploadedDocs.map((doc, idx) => (
-                              <div key={idx} className={`text-xs px-2 py-1 rounded-lg ${isDarkMode ? 'bg-white/10' : 'bg-white'} flex items-center gap-1.5`}>
+                              <div key={`uploaded-doc-${idx}-${doc.name}`} className={`text-xs px-2 py-1 rounded-lg ${isDarkMode ? 'bg-white/10' : 'bg-white'} flex items-center gap-1.5`}>
                                 <FileText size={12} className="text-cyan-400" />
                                 <span>{doc.name}</span>
                                 <span className="text-gray-500">·</span>

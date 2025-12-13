@@ -23,71 +23,49 @@ export default function ProfilePage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { showToast } = useToast();
 
-  // NOTE: reading from localStorage only in the browser
-  const email =
-    typeof window !== "undefined" ? localStorage.getItem("userEmail") || "email" : "email";
-  const user =
-    typeof window !== "undefined" ? localStorage.getItem("userName") || "User" : "User";
+  // Get userId from localStorage
   const userId =
     typeof window !== "undefined" ? localStorage.getItem("userId") || "" : "";
 
-  // existing profile hook (reads bio/location/avatar/website)
-  const { bio, location, avatar: avatarFromHook, website } = useProfile();
   const { saveProfile, isLoading, error } = useSaveProfile();
 
   // local form state
   const [formData, setFormData] = useState({
-    name: user,
-    email: email,
-    bio: bio || "",
-    location: location || "",
-    website: website || "",
+    name: "",
+    email: "",
+    bio: "",
+    location: "",
+    website: "",
   });
 
   // local avatar state so we can update immediately after upload
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(avatarFromHook || null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const previewRef = useRef<string | null>(null); // track preview URL to revoke
 
-  // keep the form in sync with hook values
+  // Fetch user profile from database
   useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      bio: bio || "",
-      location: location || "",
-      website: website || "",
-    }));
-    // keep avatar local state synced with the hook on load/updates
-    setAvatarUrl(avatarFromHook || null);
-  }, [bio, location, website, avatarFromHook]);
+    if (!userId) return;
 
-  // Fetch avatar from your GET endpoint in case the hook doesn't provide it
-  useEffect(() => {
-    async function fetchAvatar() {
-      if (!userId) return;
-      try {
-        const res = await fetch(`${AVATAR_GET_ENDPOINT_BASE}/${userId}`);
-        if (!res.ok) {
-          // no avatar yet or other non-OK response — just return silently
-          console.warn(`GET avatar responded ${res.status}`);
-          return;
+    setIsLoadingProfile(true);
+    fetch(`/api/profile?userId=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.data) {
+          setFormData({
+            name: data.data.name || "",
+            email: data.data.email || "",
+            bio: data.data.bio || "",
+            location: data.data.location || "",
+            website: data.data.website || "",
+          });
+          setAvatarUrl(data.data.profilePicture || null);
         }
-        const contentType = res.headers.get("content-type") || "";
-        if (contentType.includes("application/json")) {
-          const json = await res.json();
-          if (json?.success && json?.data?.imageUrl) {
-            setAvatarUrl(json.data.imageUrl);
-          }
-        } else {
-          // unexpected, but ignore
-          console.warn("GET avatar returned non-json response");
-        }
-      } catch (err) {
-        console.error("Failed to fetch avatar", err);
-      }
-    }
-    fetchAvatar();
+      })
+      .catch(err => console.error('Failed to fetch profile:', err))
+      .finally(() => setIsLoadingProfile(false));
   }, [userId]);
 
   // open file picker
@@ -170,10 +148,16 @@ export default function ProfilePage() {
           if (savedUrl) {
             setAvatarUrl(savedUrl);
 
-            // Optionally persist avatar into profile record immediately:
-            // await saveProfile({ userId, bio: formData.bio, location: formData.location, avatar: savedUrl, website: formData.website });
+            // Persist avatar into profile record immediately
+            await saveProfile({ 
+              userId, 
+              bio: formData.bio, 
+              location: formData.location, 
+              avatar: savedUrl, 
+              website: formData.website 
+            });
 
-            showToast("success", "Avatar uploaded successfully");
+            showToast("success", "Avatar uploaded and saved successfully");
           } else {
             showToast("success", "Avatar uploaded, but server didn't return image URL");
             console.warn("Upload response missing imageUrl:", json);
@@ -192,8 +176,7 @@ export default function ProfilePage() {
     } catch (err: any) {
       console.error("Upload exception", err);
       showToast("error", err?.message || "An error occurred while uploading avatar");
-      // revert preview if upload failed
-      setAvatarUrl(avatarFromHook || null);
+      // revert preview if upload failed - keep current avatarUrl
     } finally {
       setIsUploading(false);
       // reset the input value so same file can be selected again if needed
@@ -226,7 +209,7 @@ export default function ProfilePage() {
       userId,
       bio: formData.bio,
       location: formData.location,
-      avatar: avatarUrl || avatarFromHook || "",
+      avatar: avatarUrl || "",
       website: formData.website,
     });
 
@@ -241,7 +224,7 @@ export default function ProfilePage() {
 
   // Helper to render initials if no avatar image
   const renderInitials = () => {
-    const initials = (formData.name || user || "U")
+    const initials = (formData.name || "U")
       .split(" ")
       .map((n) => n[0])
       .slice(0, 2)
