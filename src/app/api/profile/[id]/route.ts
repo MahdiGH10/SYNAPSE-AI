@@ -22,13 +22,19 @@ export async function GET(
     }
 
     // Find profile where userId field matches the id from URL
-    const profile = await Profile.findOne({ userId: id });
+    let profile = await Profile.findOne({ userId: id });
 
     if (!profile) {
-      return NextResponse.json(
-        { success: false, message: 'Profile not found' },
-        { status: 404 }
-      );
+      console.log('Profile not found, creating new profile for user:', id);
+      // Create a new empty profile for this user
+      profile = await Profile.create({
+        userId: id,
+        bio: '',
+        location: '',
+        avatar: '',
+        website: '',
+      });
+      console.log('New profile created for user:', id);
     }
 
     return NextResponse.json(

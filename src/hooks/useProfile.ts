@@ -21,17 +21,24 @@ export function useProfile() {
         // IMPORTANT: no body for GET
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to fetch profile");
+        console.error("Failed to fetch profile:", data);
+        // Profile might not exist yet, that's okay - use empty defaults
+        if (response.status === 404) {
+          console.log("Profile not found, using empty defaults");
+          return;
+        }
+        throw new Error(data.message || "Failed to fetch profile");
       }
 
-      const data = await response.json();
       console.log("Fetched profile data:", data);
 
-      setBio(data.data.bio);
-      setLocation(data.data.location);
-      setAvatar(data.data.avatar);
-      setWebsite(data.data.website);
+      setBio(data.data.bio || "");
+      setLocation(data.data.location || "");
+      setAvatar(data.data.avatar || "");
+      setWebsite(data.data.website || "");
     } catch (error) {
       console.error("Fetch profile error:", error);
     } finally {

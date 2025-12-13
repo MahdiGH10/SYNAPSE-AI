@@ -48,7 +48,7 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
 
         setExercices(arr || []);
       } catch (e: any) {
-        setError(e?.message || "Erreur lors du chargement des exercices");
+        setError(e?.message || "Error loading exercises");
       } finally {
         setLoading(false);
       }
@@ -72,11 +72,11 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
     const handleDelete = async (id: string) => {
       if (!id) return;
       if (!userId) {
-        setError("Identifiant utilisateur manquant.");
+        setError("User ID missing.");
         return;
       }
 
-      const confirmDelete = window.confirm("Supprimer cet exercice ? Cette action est irréversible.");
+      const confirmDelete = window.confirm("Delete this exercise? This action cannot be undone.");
       if (!confirmDelete) return;
 
       // keep snapshot for rollback
@@ -99,7 +99,7 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
         if (!res.ok) {
           // rollback on failure
           setExercices(prev);
-          const msg = json?.message || "Échec de la suppression";
+          const msg = json?.message || "Deletion failed";
           setError(msg);
           console.error("Delete failed:", json || res.statusText);
           return;
@@ -110,7 +110,7 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
       } catch (err: any) {
         // rollback on error
         setExercices(prev);
-        setError(err?.message || "Erreur réseau pendant la suppression");
+        setError(err?.message || "Network error during deletion");
         console.error("Delete error:", err);
       }
     };
@@ -127,10 +127,10 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
 
     return (
       <aside
-        className={`sticky top-6 self-start flex flex-col max-h-[calc(100vh-3rem)] w-80 border-r backdrop-blur-2xl ${
+        className={`fixed left-0 top-0 h-screen flex flex-col w-80 border-r backdrop-blur-2xl z-40 ${
           isDarkMode
-            ? "bg-[#050811]/70 border-white/10"
-            : "bg-[#f7fafc]/90 border-blue-100 shadow-blue-200/40"
+            ? "bg-[#050811]/95 border-white/10"
+            : "bg-[#f7fafc]/95 border-blue-100 shadow-blue-200/40"
         }`}
       >
         {/* Header */}
@@ -141,10 +141,10 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
                 isDarkMode ? "text-gray-200" : "text-gray-800"
               }`}
             >
-              Mes exercices
+              My Exercises
             </h2>
             <p className={`text-xs mt-1 ${isDarkMode ? "text-gray-500" : "text-gray-500"}`}>
-              Historique de vos exercices générés.
+              History of your generated exercises.
             </p>
           </div>
         </div>
@@ -156,7 +156,7 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 hover:from-blue-600 hover:via-cyan-500 hover:to-blue-600 text-white text-xs font-medium shadow-md hover:shadow-cyan-400/40 transition-all"
           >
             <PlusCircle className="w-4 h-4" />
-            Nouveau exercice
+            New Exercise
           </button>
         </div>
 
@@ -165,7 +165,7 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
           {loading && (
             <div className="flex items-center justify-center py-6 text-xs text-gray-400">
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Chargement des exercices...
+              Loading exercises...
             </div>
           )}
 
@@ -182,7 +182,7 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
 
           {!loading && !error && exercices.length === 0 && (
             <p className={`text-xs px-1 py-3 ${isDarkMode ? "text-gray-500" : "text-gray-500"}`}>
-              Aucun exercice sauvegardé pour le moment.
+              No saved exercises yet.
             </p>
           )}
 

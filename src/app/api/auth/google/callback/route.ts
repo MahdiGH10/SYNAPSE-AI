@@ -8,6 +8,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email } = body;
 
+    console.log('Google callback - Email:', email);
+
     if (!email) {
       return NextResponse.json(
         { error: "Email is required" },
@@ -18,14 +20,22 @@ export async function POST(request: NextRequest) {
     // Connect to database
     await connectDB();
 
-    // Find the user by email
-    const user = await User.findOne({ email });
+    // Find or create the user by email
+    let user = await User.findOne({ email });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      console.log('User not found, creating new user for:', email);
+      // Create new user from Google data
+      user = await User.create({
+        email,
+        name: email.split('@')[0], // Use email prefix as default name
+        provider: 'google',
+        isVerified: true, // Google accounts are pre-verified
+        lastLogin: new Date(),
+      });
+      console.log('New user created:', user.email);
+    } else {
+      console.log('User found:', user.email);
     }
 
     // Update last login
