@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const userId = decoded.userId;
+    const userId = decoded.id;
     const body = await request.json();
     const { chatId, title, messages, metadata } = body;
 
@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const userId = decoded.userId;
+    const userId = decoded.id;
 
     // Get user's chats (without full message content for performance)
     const chats = await (Chat as any).findByUserId(userId);
@@ -138,3 +138,4 @@ export async function GET(request: NextRequest) {
     }, { status: 500 });
   }
 }
+

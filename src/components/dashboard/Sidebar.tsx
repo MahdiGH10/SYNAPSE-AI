@@ -14,7 +14,7 @@ import {
   Podcast,
   FileText,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { logout } from "@/hooks/UseLogout";
 
 interface SidebarProps {
@@ -32,9 +32,17 @@ const navigation = [
 export default function Sidebar({ onCollapse }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [username, setUsername] = useState('User');
+  const [email, setEmail] = useState('email');
 
-  const username = typeof  window !== 'undefined' && localStorage.getItem('userName') || 'User';
-  const email = typeof  window !== 'undefined' && localStorage.getItem('userEmail') || 'email';
+  useEffect(() => {
+    // Load user data from localStorage after component mounts
+    const storedUsername = localStorage.getItem('userName');
+    const storedEmail = localStorage.getItem('userEmail');
+    
+    if (storedUsername) setUsername(storedUsername);
+    if (storedEmail) setEmail(storedEmail);
+  }, []);
 
   
 

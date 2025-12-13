@@ -11,6 +11,11 @@ interface Message {
   role: 'user' | 'assistant' | 'system';
   content: string;
   replyTo?: string;
+  attachments?: Array<{
+    name: string;
+    category: string;
+    size: string;
+  }>;
   sources?: Array<{
     doc_name: string;
     category: string;
@@ -23,6 +28,7 @@ interface UploadedDoc {
   name: string;
   category: string;
   confidence: number;
+  text?: string; // Store document text for context
 }
 
 interface Chat {
@@ -38,30 +44,113 @@ export default function ChatInterface() {
   const [isLoadingChats, setIsLoadingChats] = useState(true);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false); // Track active streaming
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [uploadedDocs, setUploadedDocs] = useState<UploadedDoc[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Streaming optimization - use ref to avoid re-renders during streaming
+  const streamingContentRef = useRef<string>('');
+  const streamingMessageIdRef = useRef<string>('');
+  const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
   const activeChat = chats.find(c => c.id === activeChatId);
   const isChatEmpty = !activeChat || activeChat.messages.length === 0;
 
-
-
   const router = useRouter();
 
-    useEffect(() => {
-      if (typeof window !== "undefined") {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          router.replace("/login");
-        }
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.replace("/login");
       }
-    }, [router]);
+    }
+  }, [router]);
+
+  /* ---------- Drag and drop handlers ---------- */
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      const file = files[0]; // Handle first file
+      await processFileUpload(file);
+    }
+  };
+
+  /* ---------- Process file upload ---------- */
+  const processFileUpload = async (file: File) => {
+    setIsUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch('/api/documents/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const category = data.data?.classification?.category || data.classification?.category || 'Document';
+        const confidence = data.data?.classification?.confidence || data.classification?.confidence || 0;
+        const extractedText = data.data?.text || '';
+        const wordCount = data.data?.wordCount || 0;
+        const pageCount = data.data?.pages || 0;
+        
+        setUploadedDocs(prev => [...prev, {
+          name: file.name,
+          category: category,
+          confidence: confidence,
+          text: extractedText
+        }]);
+      } else {
+        console.error('Upload failed:', data.error);
+        alert(`Upload failed: ${data.error || 'Unknown error'}\n${data.message || ''}`);
+      }
+    } catch (error: any) {
+      console.error('Upload failed:', error);
+      alert(`Upload error: ${error.message || 'Network or server error'}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   /* ---------- Load user's chats from database on mount ---------- */
   useEffect(() => {
@@ -188,10 +277,28 @@ export default function ChatInterface() {
     }
   }, [input]);
 
-  /* ---------- Scroll to bottom on every message change ---------- */
+  /* ---------- Detect user scroll (ChatGPT-style) ---------- */
   useEffect(() => {
-    inputContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [activeChat?.messages, isTyping]);
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 50;
+      setIsUserScrolling(!isAtBottom);
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  /* ---------- Auto-scroll to bottom on new messages (ChatGPT-style) ---------- */
+  useEffect(() => {
+    // Only auto-scroll if user hasn't manually scrolled up
+    if (messagesEndRef.current && !isUserScrolling && (isStreaming || isTyping || activeChat?.messages.length)) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }, [activeChat?.messages.length, isTyping, isStreaming, isUserScrolling]);
 
   /* ---------- New chat ---------- */
   const createNewChat = () => {
@@ -314,7 +421,7 @@ export default function ChatInterface() {
 
   /* ---------- Auto-save when chat changes ---------- */
   useEffect(() => {
-    if (activeChat && activeChat.messages.length > 0 && !isLoadingChats) {
+    if (activeChat && activeChat.messages.length > 0 && !isLoadingChats && !isStreaming) {
       // Debounce saving to avoid too many requests
       const timer = setTimeout(() => {
         saveChat(activeChat);
@@ -322,88 +429,37 @@ export default function ChatInterface() {
 
       return () => clearTimeout(timer);
     }
-  }, [activeChat?.messages, isLoadingChats]);
+  }, [activeChat?.messages.length, isLoadingChats, isStreaming]);
 
   /* ---------- Upload document ---------- */
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    setIsUploading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const token = localStorage.getItem('token');
-      
-      // Try new multi-format endpoint first, fallback to RAG if needed
-      const response = await fetch('/api/documents/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        const category = data.data?.classification?.category || data.classification?.category || 'Document';
-        const confidence = data.data?.classification?.confidence || data.classification?.confidence || 0;
-        
-        setUploadedDocs(prev => [...prev, {
-          name: file.name,
-          category: category,
-          confidence: confidence
-        }]);
-
-        // Add system message with file type info
-        const fileType = file.name.split('.').pop()?.toUpperCase() || 'FILE';
-        const systemMsg: Message = {
-          id: Date.now().toString(),
-          role: 'system',
-          content: `📄 **${file.name}** (${fileType}) uploaded successfully!\n🎯 Category: **${category}** (${(confidence * 100).toFixed(1)}% confidence)\n📝 Extracted: ${data.data?.extractedLength || 0} characters\n\n✨ You can now ask questions about this document!`
-        };
-
-        setChats(prev => prev.map(c =>
-          c.id === activeChatId ? { ...c, messages: [...c.messages, systemMsg] } : c
-        ));
-      } else {
-        // Show error message
-        const errorMsg: Message = {
-          id: Date.now().toString(),
-          role: 'system',
-          content: `❌ Upload failed: ${data.error || 'Unknown error'}\n\n${data.message || ''}\n\nSupported formats: PDF, DOCX, TXT, PPTX (limited), Images (limited)`
-        };
-        setChats(prev => prev.map(c =>
-          c.id === activeChatId ? { ...c, messages: [...c.messages, errorMsg] } : c
-        ));
-      }
-    } catch (error: any) {
-      console.error('Upload failed:', error);
-      const errorMsg: Message = {
-        id: Date.now().toString(),
-        role: 'system',
-        content: `❌ Upload error: ${error.message || 'Network error'}\n\nPlease try again or check your connection.`
-      };
-      setChats(prev => prev.map(c =>
-        c.id === activeChatId ? { ...c, messages: [...c.messages, errorMsg] } : c
-      ));
-    } finally {
-      setIsUploading(false);
-    }
+    await processFileUpload(file);
   };
 
   /* ---------- Send message ---------- */
   const handleSend = async () => {
     if (!input.trim()) return;
 
+    // Reset scroll state when sending a new message
+    setIsUserScrolling(false);
+
+    // Capture documents before clearing
+    const docsToAttach = [...uploadedDocs];
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content: input,
-      replyTo: replyTo || undefined
+      replyTo: replyTo || undefined,
+      ...(docsToAttach.length > 0 && {
+        attachments: docsToAttach.map(doc => ({
+          name: doc.name,
+          category: doc.category,
+          size: doc.text ? `${Math.round(doc.text.length / 1024)}KB` : 'N/A'
+        }))
+      })
     };
 
     const updatedChats = chats.map(c =>
@@ -421,6 +477,7 @@ export default function ChatInterface() {
     const currentReplyTo = replyTo;
     setInput('');
     setReplyTo(null);
+    setUploadedDocs([]); // Clear document indicator - files now shown in message bubble
     textareaRef.current?.focus();
 
     /* Call real API with streaming */
@@ -433,42 +490,24 @@ export default function ChatInterface() {
         throw new Error('Not authenticated');
       }
 
-      // Check if we have uploaded documents - use RAG
-      if (uploadedDocs.length > 0) {
-        // RAG Mode: Query documents first
-        const ragResponse = await fetch('/api/rag/query', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ question: currentInput })
-        });
-
-        const ragData = await ragResponse.json();
-
-        if (ragData.success) {
-          const aiMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            role: 'assistant',
-            content: ragData.answer,
-            sources: ragData.sources
-          };
-
-          setChats(prev => prev.map(c =>
-            c.id === activeChatId ? { ...c, messages: [...c.messages, aiMessage] } : c
-          ));
-          setIsTyping(false);
-          return;
-        }
+      // Prepare message (with or without document context)
+      let messageToSend = currentInput;
+      
+      if (docsToAttach.length > 0 && docsToAttach.some(doc => doc.text)) {
+        // Add document context if documents are uploaded
+        const documentContext = docsToAttach
+          .filter(doc => doc.text)
+          .map(doc => `[Document: ${doc.name}]\n${doc.text}`)
+          .join('\n\n---\n\n');
+        
+        messageToSend = `Context: The user has uploaded the following documents:\n\n${documentContext}\n\n---\n\nUser Question: ${currentInput}\n\nPlease answer based on the documents provided above. If the answer is not in the documents, say so clearly.`;
       }
-
-      // Regular chat mode (no documents)
+      
       // Prepare conversation history
-      const conversationHistory = activeChat.messages.filter(m => m.role !== 'system').map(msg => ({
+      const conversationHistory = activeChat?.messages.filter(m => m.role !== 'system').map(msg => ({
         role: msg.role,
         content: msg.content
-      }));
+      })) || [];
 
       // Call streaming API
       const response = await fetch('/api/chat/stream', {
@@ -478,7 +517,7 @@ export default function ChatInterface() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          message: currentInput,
+          message: messageToSend,
           conversationHistory,
           model: 'synapse-creative',
           temperature: 0.7
@@ -493,7 +532,6 @@ export default function ChatInterface() {
       // Handle streaming response
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
-      let accumulatedContent = '';
 
       // Create AI message placeholder
       const aiMessageId = (Date.now() + 1).toString();
@@ -503,9 +541,39 @@ export default function ChatInterface() {
         content: ''
       };
 
+      // Reset streaming refs
+      streamingContentRef.current = '';
+      streamingMessageIdRef.current = aiMessageId;
+
       setChats(prev => prev.map(c =>
         c.id === activeChatId ? { ...c, messages: [...c.messages, aiMessage] } : c
       ));
+
+      // Smooth update function - updates UI every 16ms (~60fps) for fluid streaming
+      const updateStreamingMessage = () => {
+        const content = streamingContentRef.current;
+        const messageId = streamingMessageIdRef.current;
+        
+        setChats(prev => prev.map(c =>
+          c.id === activeChatId
+            ? {
+                ...c,
+                messages: c.messages.map(m =>
+                  m.id === messageId
+                    ? { ...m, content }
+                    : m
+                )
+              }
+            : c
+        ));
+        
+        // Smooth scroll to bottom during streaming
+        if (messagesEndRef.current) {
+          messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+        }
+      };
+
+      setIsStreaming(true); // Start streaming visual indicator
 
       if (reader) {
         while (true) {
@@ -524,21 +592,18 @@ export default function ChatInterface() {
               try {
                 const parsed = JSON.parse(data);
                 if (parsed.content) {
-                  accumulatedContent += parsed.content;
+                  // Accumulate in ref (no re-render)
+                  streamingContentRef.current += parsed.content;
                   
-                  // Update message in real-time
-                  setChats(prev => prev.map(c =>
-                    c.id === activeChatId
-                      ? {
-                          ...c,
-                          messages: c.messages.map(m =>
-                            m.id === aiMessageId
-                              ? { ...m, content: accumulatedContent }
-                              : m
-                          )
-                        }
-                      : c
-                  ));
+                  // Clear existing timeout
+                  if (streamingTimeoutRef.current) {
+                    clearTimeout(streamingTimeoutRef.current);
+                  }
+                  
+                  // Schedule smooth update (16ms = ~60fps for fluid animation)
+                  streamingTimeoutRef.current = setTimeout(() => {
+                    updateStreamingMessage();
+                  }, 16);
                 }
               } catch (e) {
                 // Skip invalid JSON
@@ -546,12 +611,23 @@ export default function ChatInterface() {
             }
           }
         }
+        
+        // Final update after stream completes
+        if (streamingTimeoutRef.current) {
+          clearTimeout(streamingTimeoutRef.current);
+        }
+        updateStreamingMessage();
       }
 
       setIsTyping(false);
+      setIsStreaming(false); // Stop streaming indicator
+      
+      // Clear document indicator after response completes
+      setUploadedDocs([]);
     } catch (error) {
       console.error('Chat API error:', error);
       setIsTyping(false);
+      setIsStreaming(false); // Stop streaming on error
       
       // Show error message
       const errorMessage: Message = {
@@ -691,11 +767,12 @@ export default function ChatInterface() {
             </div>
           </div>
 
-          {/* Scrollable container: messages + input */}
-          <div className="flex-1 overflow-y-auto scrollbar-thin">
-            <div className="h-full flex flex-col">
-              {/* Welcome screen */}
-              {isChatEmpty ? (
+          {/* Main content area - split into messages and fixed input */}
+          {isChatEmpty ? (
+            /* Welcome screen with embedded input */
+            <div className="flex-1 overflow-y-auto scrollbar-thin">
+              <div className="h-full flex flex-col">
+                {/* Welcome screen */}
                 <div className="flex-1 flex flex-col items-center justify-center px-4">
                   <div className="w-full max-w-3xl mx-auto">
                     <div className="text-center mb-12 space-y-4">
@@ -710,36 +787,68 @@ export default function ChatInterface() {
                       </p>
                     </div>
 
-                    {/* Uploaded docs indicator on welcome screen */}
-                    {uploadedDocs.length > 0 && (
-                      <div className={`mb-4 p-4 ${isDarkMode ? 'bg-cyan-500/10' : 'bg-cyan-50'} border border-cyan-400/50 rounded-xl`}>
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2 text-sm font-medium">
-                            <FileText size={18} className="text-cyan-400" />
-                            <span>{uploadedDocs.length} document{uploadedDocs.length > 1 ? 's' : ''} ready for Q&A</span>
-                          </div>
-                          <button
-                            onClick={() => setUploadedDocs([])}
-                            className="text-xs text-gray-400 hover:text-red-400 transition-colors"
-                          >
-                            Clear All
-                          </button>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {uploadedDocs.map((doc, idx) => (
-                            <div key={idx} className={`text-xs px-3 py-1.5 rounded-lg ${isDarkMode ? 'bg-white/10' : 'bg-white'} flex items-center gap-2`}>
-                              <FileText size={12} className="text-cyan-400" />
-                              <span className="font-medium">{doc.name}</span>
-                              <span className="text-gray-500">·</span>
-                              <span className="text-cyan-400">{doc.category}</span>
-                            </div>
-                          ))}
+                    {/* Drag and drop overlay */}
+                    {isDragging && (
+                      <div className="absolute inset-0 z-50 bg-cyan-500/20 backdrop-blur-sm border-4 border-dashed border-cyan-400 rounded-3xl flex items-center justify-center">
+                        <div className="text-center">
+                          <Upload size={64} className="mx-auto mb-4 text-cyan-400 animate-bounce" />
+                          <p className="text-2xl font-bold text-white">Drop your file here</p>
+                          <p className="text-gray-300 mt-2">PDF, DOCX, TXT, CSV supported</p>
                         </div>
                       </div>
                     )}
 
-                    <div className="relative">
-                      <div className={`${isDarkMode ? 'bg-[#1a1f2e]/60' : 'bg-white/60'} backdrop-blur-xl rounded-3xl border ${isDarkMode ? 'border-white/10' : 'border-blue-200'} shadow-2xl overflow-hidden transition-all duration-300 hover:shadow-cyan-400/20`}>
+                    {/* Compact document indicator - ChatGPT style */}
+                    {uploadedDocs.length > 0 && (
+                      <div className={`mb-3 px-3 py-2 rounded-lg flex items-center gap-2 text-sm w-fit ${
+                        isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
+                      }`}>
+                        <FileText size={14} className="text-blue-500 flex-shrink-0" />
+                        <div className="flex items-center gap-2">
+                          <span className={`font-medium ${
+                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                          }`}>
+                            {uploadedDocs.length} {uploadedDocs.length > 1 ? 'files' : 'file'}
+                          </span>
+                          <span className={`text-xs ${
+                            isDarkMode ? 'text-gray-500' : 'text-gray-500'
+                          }`}>
+                            {uploadedDocs.map(d => d.name).join(', ').substring(0, 50)}{uploadedDocs.map(d => d.name).join(', ').length > 50 ? '...' : ''}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => setUploadedDocs([])}
+                          className={`p-1 rounded hover:bg-black/10 transition-colors flex-shrink-0 ml-2 ${
+                            isDarkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                          title="Remove all documents"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    )}
+
+                    <div 
+                      className="relative"
+                      onDragEnter={handleDragEnter}
+                      onDragLeave={handleDragLeave}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                    >
+                      {isDragging && (
+                        <div className={`absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 ${
+                          isDarkMode ? 'bg-cyan-500/20' : 'bg-cyan-400/20'
+                        } backdrop-blur-sm border-4 border-dashed border-cyan-400 rounded-3xl`}>
+                          <Upload size={64} className="animate-bounce text-cyan-400" />
+                          <p className={`text-xl font-semibold ${isDarkMode ? 'text-cyan-300' : 'text-cyan-600'}`}>
+                            Drop your file here
+                          </p>
+                          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                            PDF, DOCX, TXT, CSV, PPTX, Images supported
+                          </p>
+                        </div>
+                      )}
+                      <div className={`relative ${isDarkMode ? 'bg-[#2b2b2b]' : 'bg-white'} rounded-3xl border ${isDarkMode ? 'border-[#424242]' : 'border-gray-200'} shadow-[0_0_15px_rgba(0,0,0,0.1)] transition-all duration-200 hover:shadow-[0_0_20px_rgba(0,0,0,0.15)] focus-within:shadow-[0_0_20px_rgba(6,182,212,0.15)] overflow-hidden`}>
                         <textarea
                           ref={textareaRef}
                           value={input}
@@ -750,57 +859,84 @@ export default function ChatInterface() {
                               handleSend();
                             }
                           }}
-                          placeholder={uploadedDocs.length > 0 ? "Ask about your documents..." : "Ask SynapseAI a question or upload a document..."}
-                          className={`w-full bg-transparent py-5 px-6 pr-28 ${isDarkMode ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-600'} focus:outline-none resize-none text-base md:text-lg`}
-                          style={{ minHeight: '72px', maxHeight: '200px' }}
+                          placeholder={uploadedDocs.length > 0 ? "Ask about your documents..." : "Message SynapseAI..."}
+                          className={`w-full bg-transparent py-5 px-6 pr-28 ${isDarkMode ? 'text-[#ececf1] placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'} focus:outline-none resize-none text-base leading-relaxed`}
+                          style={{ minHeight: '64px', maxHeight: '200px' }}
                         />
-                        <div className="absolute right-4 bottom-4 flex items-center gap-2">
+                        <div className="absolute right-3 bottom-3 flex items-center gap-1.5">
                           <input
                             ref={fileInputRef}
                             type="file"
-                            accept=".pdf,.txt,.md,.doc,.docx,.pptx,image/*"
+                            accept=".pdf,.txt,.md,.doc,.docx,.pptx,.csv,image/*"
                             onChange={handleFileUpload}
                             className="hidden"
                           />
                           <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isUploading}
-                            className={`p-3 ${isDarkMode ? 'bg-white/10 hover:bg-white/20' : 'bg-gray-200 hover:bg-gray-300'} rounded-xl transition-all duration-300 hover:scale-105`}
-                            title="Upload document (PDF, DOCX, PPTX, TXT, Images)"
+                            className={`p-2 ${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-gray-100'} rounded-lg transition-colors`}
+                            title="Upload document (PDF, DOCX, PPTX, CSV, TXT, Images)"
                           >
                             {isUploading ? (
                               <div className="animate-spin text-cyan-400">⏳</div>
                             ) : (
-                              <Upload size={20} className="text-cyan-400" />
+                              <Upload size={20} className={isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-700'} />
                             )}
                           </button>
                           <button
                             onClick={handleSend}
                             disabled={!input.trim()}
-                            className="p-3 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 hover:from-blue-500 hover:via-blue-400 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-700 disabled:opacity-50 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 disabled:scale-100 disabled:hover:shadow-lg"
+                            className={`p-2 rounded-lg transition-all ${
+                              input.trim() 
+                                ? 'bg-cyan-500 hover:bg-cyan-600 text-white' 
+                                : 'bg-transparent text-gray-400 cursor-not-allowed'
+                            }`}
                           >
-                            <Send size={20} className="text-white" />
+                            <Send size={20} />
                           </button>
                         </div>
                       </div>
-                      <p className="text-center mt-4 text-sm text-gray-500">
-                        {uploadedDocs.length > 0 ? (
-                          <span className="flex items-center justify-center gap-1">
-                            <Zap size={14} className="text-cyan-400" /> Answers powered by your documents + ML + RAG + Qwen
-                          </span>
-                        ) : (
-                          <>
-                            <Upload size={14} className="inline text-cyan-400 mr-1" />Upload documents for intelligent Q&A • Press <kbd className={`px-2 py-1 ${isDarkMode ? 'bg-white/10' : 'bg-gray-200'} rounded text-xs font-medium`}>Enter</kbd> to send
-                          </>
-                        )}
-                      </p>
                     </div>
+                    <p className="text-center mt-4 text-sm text-gray-500">
+                      {uploadedDocs.length > 0 ? (
+                        <span className="flex items-center justify-center gap-1">
+                          <Zap size={14} className="text-cyan-400" /> Answers powered by your documents + ML + RAG + Qwen
+                        </span>
+                      ) : (
+                        <>
+                          <Upload size={14} className="inline text-cyan-400 mr-1" />Upload documents for intelligent Q&A • Press <kbd className={`px-2 py-1 ${isDarkMode ? 'bg-white/10' : 'bg-gray-200'} rounded text-xs font-medium`}>Enter</kbd> to send
+                        </>
+                      )}
+                    </p>
                   </div>
                 </div>
-              ) : (
-                <>
-                  {/* Messages */}
-                  <div className="flex-1 px-4 py-8">
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Messages Area - Scrollable (ChatGPT Style) */}
+              <div 
+                ref={messagesContainerRef}
+                className="flex-1 overflow-y-auto scrollbar-thin scroll-smooth"
+              >
+                <div 
+                  className="px-4 pt-6 pb-32"
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                >
+                    {/* Drag overlay for chat area */}
+                    {isDragging && (
+                      <div className="absolute inset-0 z-50 bg-cyan-500/20 backdrop-blur-sm border-4 border-dashed border-cyan-400 rounded-2xl flex items-center justify-center m-4">
+                        <div className="text-center">
+                          <Upload size={48} className="mx-auto mb-3 text-cyan-400 animate-bounce" />
+                          <p className="text-xl font-bold text-white">Drop file to upload</p>
+                          <p className="text-gray-300 text-sm mt-1">PDF, DOCX, TXT, CSV</p>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="max-w-3xl mx-auto space-y-6">
                       {activeChat.messages.map((message) => (
                         <div
@@ -830,11 +966,14 @@ export default function ChatInterface() {
                                   SynapseAI Student Assistant
                                 </div>
 
-                                <div className={`prose ${isDarkMode ? 'prose-invert' : 'prose-gray'} max-w-none`}>
+                                <div className={`prose ${isDarkMode ? 'prose-invert' : 'prose-gray'} max-w-none streaming-text`}>
                                   <MessageRenderer 
                                     content={message.content}
                                     isDarkMode={isDarkMode}
                                   />
+                                  {isStreaming && message.id === streamingMessageIdRef.current && (
+                                    <span className="inline-block w-1.5 h-5 bg-cyan-400 animate-pulse ml-0.5 align-middle"></span>
+                                  )}
                                 </div>
 
                                 {/* Source citations */}
@@ -878,6 +1017,37 @@ export default function ChatInterface() {
                                     ↳ {activeChat.messages.find(m => m.id === message.replyTo)?.content.slice(0, 60)}...
                                   </div>
                                 )}
+                                
+                                {/* File Attachments - ChatGPT style */}
+                                {message.attachments && message.attachments.length > 0 && (
+                                  <div className="mb-2 space-y-1.5">
+                                    {message.attachments.map((file, idx) => (
+                                      <div 
+                                        key={idx}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
+                                          isDarkMode 
+                                            ? 'bg-white/10 border border-white/20' 
+                                            : 'bg-white border border-gray-200'
+                                        }`}
+                                      >
+                                        <FileText size={16} className="text-blue-400 flex-shrink-0" />
+                                        <div className="flex-1 min-w-0">
+                                          <div className={`font-medium truncate ${
+                                            isDarkMode ? 'text-gray-200' : 'text-gray-800'
+                                          }`}>
+                                            {file.name}
+                                          </div>
+                                          <div className={`text-xs ${
+                                            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                                          }`}>
+                                            {file.category} • {file.size}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                
                                 <div className={`rounded-3xl px-5 py-3 shadow-lg ${isDarkMode ? 'bg-gradient-to-r from-blue-600/80 to-cyan-600/80' : 'bg-gradient-to-r from-blue-500 to-cyan-500'}`}>
                                   <div className="text-white text-base whitespace-pre-wrap break-words">
                                     {message.content}
@@ -906,8 +1076,27 @@ export default function ChatInterface() {
                     </div>
                   </div>
 
-                  {/* Input - Fixed at bottom */}
-                  <div ref={inputContainerRef} className="border-t border-white/10 px-4 py-6">
+                  {/* Scroll to bottom button (ChatGPT-style) */}
+                  {isUserScrolling && (
+                    <button
+                      onClick={() => {
+                        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+                        setIsUserScrolling(false);
+                      }}
+                      className={`absolute bottom-4 right-4 p-3 rounded-full shadow-lg transition-all hover:scale-110 ${
+                        isDarkMode ? 'bg-[#2b2b2b] hover:bg-[#3b3b3b] text-cyan-400' : 'bg-white hover:bg-gray-100 text-cyan-600'
+                      } border ${isDarkMode ? 'border-white/10' : 'border-gray-200'}`}
+                      title="Scroll to bottom"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 14L6 10H14L10 14Z" fill="currentColor"/>
+                      </svg>
+                    </button>
+                  )}
+              </div>
+
+              {/* Input - Fixed at bottom (ChatGPT-style) */}
+              <div ref={inputContainerRef} className={`sticky bottom-0 z-10 ${isDarkMode ? 'bg-gradient-to-t from-[#0a0f1e] via-[#0a0f1e]/95 to-transparent' : 'bg-gradient-to-t from-gray-50 via-gray-50/95 to-transparent'} pt-6 pb-4 px-4`}>
                     <div className="max-w-3xl mx-auto">
                       {/* Uploaded docs indicator - chat mode */}
                       {uploadedDocs.length > 0 && (
@@ -943,76 +1132,96 @@ export default function ChatInterface() {
                           <button onClick={() => setReplyTo(null)} className="text-cyan-400 hover:text-cyan-300 ml-2 font-bold">✕</button>
                         </div>
                       )}
-                      <div className={`relative ${isDarkMode ? 'bg-[#1a1f2e]/60' : 'bg-white/60'} backdrop-blur-xl rounded-3xl border ${isDarkMode ? 'border-white/10' : 'border-blue-200'} shadow-xl overflow-hidden transition-all duration-300 hover:shadow-cyan-400/20`}>
-                        <textarea
-                          ref={textareaRef}
-                          value={input}
-                          onChange={(e) => setInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
+                      <div 
+                        className="relative"
+                        onDragEnter={handleDragEnter}
+                        onDragLeave={handleDragLeave}
+                        onDragOver={handleDragOver}
+                        onDrop={handleDrop}
+                      >
+                        {isDragging && (
+                          <div className={`absolute inset-0 z-50 flex flex-col items-center justify-center gap-4 ${
+                            isDarkMode ? 'bg-cyan-500/20' : 'bg-cyan-400/20'
+                          } backdrop-blur-sm border-4 border-dashed border-cyan-400 rounded-3xl`}>
+                            <Upload size={64} className="animate-bounce text-cyan-400" />
+                            <p className={`text-xl font-semibold ${isDarkMode ? 'text-cyan-300' : 'text-cyan-600'}`}>
+                              Drop your file here
+                            </p>
+                            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                              PDF, DOCX, TXT, CSV, PPTX, Images supported
+                            </p>
+                          </div>
+                        )}
+                        <div className={`relative ${isDarkMode ? 'bg-[#2b2b2b]' : 'bg-white'} rounded-3xl border ${isDarkMode ? 'border-[#424242]' : 'border-gray-200'} shadow-[0_0_15px_rgba(0,0,0,0.1)] transition-all duration-200 hover:shadow-[0_0_20px_rgba(0,0,0,0.15)] focus-within:shadow-[0_0_20px_rgba(6,182,212,0.15)] overflow-hidden`}>
+                          <textarea
+                            ref={textareaRef}
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
                               handleSend();
                             }
                           }}
-                          placeholder={uploadedDocs.length > 0 ? "Ask about your documents..." : "Ask a question..."}
-                          className={`w-full bg-transparent py-4 px-6 pr-24 ${isDarkMode ? 'text-gray-100 placeholder-gray-500' : 'text-gray-900 placeholder-gray-600'} focus:outline-none resize-none text-base`}
-                          style={{ minHeight: '56px', maxHeight: '160px' }}
+                          placeholder={uploadedDocs.length > 0 ? "Ask about your documents..." : "Message SynapseAI..."}
+                          className={`w-full bg-transparent py-5 px-6 pr-28 ${isDarkMode ? 'text-[#ececf1] placeholder-gray-500' : 'text-gray-900 placeholder-gray-400'} focus:outline-none resize-none text-base leading-relaxed`}
+                          style={{ minHeight: '56px', maxHeight: '200px' }}
                         />
-                        <div className="absolute right-4 bottom-4 flex items-center gap-2">
+                        <div className="absolute right-3 bottom-3 flex items-center gap-1.5">
                           <input
                             ref={fileInputRef}
                             type="file"
-                            accept=".pdf,.txt,.md,.doc,.docx,.pptx,image/*"
+                            accept=".pdf,.txt,.md,.doc,.docx,.pptx,.csv,image/*"
                             onChange={handleFileUpload}
                             className="hidden"
                           />
                           <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isUploading}
-                            className={`p-2.5 ${isDarkMode ? 'bg-white/10 hover:bg-white/20' : 'bg-gray-200 hover:bg-gray-300'} rounded-xl transition-all duration-300`}
-                            title="Upload document (PDF, DOCX, PPTX, TXT, Images)"
+                            className={`p-2 ${isDarkMode ? 'hover:bg-white/5' : 'hover:bg-gray-100'} rounded-lg transition-colors`}
+                            title="Upload document (PDF, DOCX, PPTX, CSV, TXT, Images)"
                           >
                             {isUploading ? (
-                              <div className="animate-spin">⏳</div>
+                              <div className="animate-spin text-cyan-400">⏳</div>
                             ) : (
-                              <Upload size={18} className="text-cyan-400" />
+                              <Upload size={20} className={isDarkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-700'} />
                             )}
                           </button>
                           <button
                             onClick={handleSend}
                             disabled={!input.trim()}
-                            className="p-2.5 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 hover:from-blue-500 hover:via-blue-400 hover:to-cyan-500 disabled:from-gray-600 disabled:to-gray-700 disabled:opacity-50 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 disabled:scale-100"
+                            className={`p-2 rounded-lg transition-all ${
+                              input.trim() 
+                                ? 'bg-cyan-500 hover:bg-cyan-600 text-white' 
+                                : 'bg-transparent text-gray-400 cursor-not-allowed'
+                            }`}
                           >
-                            <Send size={18} className="text-white" />
+                            <Send size={20} />
                           </button>
                         </div>
                       </div>
-                      <p className="text-center mt-3 text-xs text-gray-500 flex items-center justify-center gap-1">
-                        <Zap size={12} className="text-cyan-400" /> {uploadedDocs.length > 0 ? 'Answers powered by your documents + ML classifier + RAG + Qwen' : 'SynapseAI can make mistakes.'}
-                      </p>
                     </div>
                   </div>
-                </>
-              )}
-            </div>
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
       <style jsx>{`
-        @keyframes gradient-xy { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-        @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-30px) rotate(5deg); } }
-        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes shimmer { 0%, 100% { background-position: -200% 0; } 50% { background-position: 200% 0; } }
-        .animate-gradient-xy { background-size: 400% 400%; animation: gradient-xy 20s ease infinite; }
-        .animate-float { animation: float linear infinite; }
-        .animate-fade-in { animation: fade-in 0.6s ease-out forwards; }
-        .animate-shimmer { background-size: 200% 200%; animation: shimmer 3s linear infinite; }
-        .scrollbar-thin { scrollbar-width: thin; }
-        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
-        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-      `}</style>
-    </>
-  );
-}
+          @keyframes gradient-xy { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+          @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-30px) rotate(5deg); } }
+          @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+          @keyframes shimmer { 0%, 100% { background-position: -200% 0; } 50% { background-position: 200% 0; } }
+          .animate-gradient-xy { background-size: 400% 400%; animation: gradient-xy 20s ease infinite; }
+          .animate-float { animation: float linear infinite; }
+          .animate-fade-in { animation: fade-in 0.6s ease-out forwards; }
+          .animate-shimmer { background-size: 200% 200%; animation: shimmer 3s linear infinite; }
+          .scrollbar-thin { scrollbar-width: thin; }
+          .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+          .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+          .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+        `}</style>
+      </>
+    );
+  }

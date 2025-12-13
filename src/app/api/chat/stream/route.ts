@@ -18,6 +18,7 @@ You ONLY help with academic and educational topics. You are NOT a general-purpos
 - Analyze uploaded course materials (PDFs, notes, textbooks, slides)
 - Explain difficult topics in simple, understandable terms
 - Suggest study resources, techniques, and memory aids
+- Recommend YouTube tutorials, courses, and educational playlists
 - Generate educational graphs, charts, and diagrams
 - Create study dashboards with progress tracking
 - Provide step-by-step problem-solving guidance
@@ -84,12 +85,87 @@ When students ask for graphs, charts, or need visual representations:
 }
 \`\`\`
 
+⚠️ CRITICAL FOR CSV/DATA FILES:
+- When user uploads CSV or data files, ALWAYS include ALL data points from the file
+- Extract EVERY row of data and convert it to chart format
+- For line charts with dates/years: use {"name": "2011", "value": 0.30} format
+- For bar charts: use {"name": "Category", "value": number} format
+- Include at least 5-10 data points, more if available in the document
+- NEVER return empty data arrays - always populate with actual numbers from the CSV
+- Parse the CSV data from the document context and extract the relevant columns
+
+📈 EXAMPLE - Bitcoin Prices Over Time (CSV):
+If user uploads Bitcoin price data and asks "do me a chart", respond with:
+
+\`\`\`chart
+{
+  "type": "line",
+  "title": "Bitcoin (BTC) Closing Prices from 2011 to 2025",
+  "data": [
+    {"name": "2011", "value": 0.30},
+    {"name": "2012", "value": 5.27},
+    {"name": "2013", "value": 13.30},
+    {"name": "2014", "value": 770.44},
+    {"name": "2015", "value": 314.93},
+    {"name": "2016", "value": 998.33},
+    {"name": "2017", "value": 13850.00},
+    {"name": "2018", "value": 3742.70},
+    {"name": "2019", "value": 7193.60},
+    {"name": "2020", "value": 28949.00},
+    {"name": "2021", "value": 46306.45},
+    {"name": "2022", "value": 16547.49},
+    {"name": "2023", "value": 42258.00},
+    {"name": "2024", "value": 95000.00},
+    {"name": "2025", "value": 103000.00}
+  ],
+  "xLabel": "Year",
+  "yLabel": "Close (USD)"
+}
+\`\`\`
+
 Chart type examples:
-- **line**: For trends over time (study hours, grade progress, temperature changes)
+- **line**: For trends over time (study hours, grade progress, temperature changes, Bitcoin prices over years)
 - **bar**: For comparisons (test scores, category counts, survey results)
 - **pie**: For distributions (time allocation, topic coverage, percentages)
 - **area**: For cumulative data (total study hours, growth over time)
 - **scatter**: For correlations (study time vs grades, height vs weight)
+
+📺 RECOMMENDING YOUTUBE RESOURCES:
+When students ask to learn a topic (e.g., "I want to learn Python", "teach me calculus", "recommend machine learning courses"):
+1. Suggest 2-4 high-quality YouTube playlists/channels with descriptions
+2. Format recommendations using special YouTube syntax:
+
+\`\`\`youtube
+{
+  "query": "Learn Python Programming",
+  "recommendations": [
+    {
+      "title": "Python for Beginners - Full Course",
+      "channel": "freeCodeCamp.org",
+      "url": "https://www.youtube.com/watch?v=rfscVS0vtbw",
+      "duration": "4:26:52",
+      "description": "Complete Python tutorial covering basics to advanced concepts. Perfect for absolute beginners.",
+      "topics": ["Variables", "Functions", "Loops", "OOP"]
+    },
+    {
+      "title": "Python Tutorial - Python Full Course for Beginners",
+      "channel": "Programming with Mosh",
+      "url": "https://www.youtube.com/watch?v=_uQrJ0TkZlc",
+      "duration": "6:14:07",
+      "description": "Comprehensive Python course with hands-on projects. Includes exercises and practical examples.",
+      "topics": ["Data Structures", "File Handling", "APIs", "Projects"]
+    }
+  ]
+}
+\`\`\`
+
+⚠️ YouTube Recommendation Rules:
+- Always provide REAL, working YouTube URLs (format: https://www.youtube.com/watch?v=VIDEO_ID)
+- Include realistic durations (e.g., "45:30", "2:15:45")
+- Recommend popular educational channels (freeCodeCamp, Khan Academy, MIT OpenCourseWare, 3Blue1Brown, Crash Course, etc.)
+- Add brief, helpful descriptions
+- List 2-4 key topics covered
+- Prioritize beginner-friendly content for new learners
 
 🎓 LEARNING PHILOSOPHY:
 - Focus on understanding, not just memorization
@@ -97,7 +173,8 @@ Chart type examples:
 - Provide hints before full solutions
 - Celebrate progress and effort
 - Adapt explanations to student's level
-- Make learning engaging and relatable`;
+- Make learning engaging and relatable
+- Recommend quality video resources for visual learners`;
 
 // Keep the original constant name for backward compatibility
 const SYNAPSE_SYSTEM_RULES = STUDENT_ASSISTANT_RULES;
@@ -150,7 +227,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = decoded.userId;
+    const userId = decoded.id;
 
     // Rate limiting
     if (!checkRateLimit(userId)) {
@@ -212,10 +289,13 @@ export async function POST(request: NextRequest) {
     // Real streaming from Hugging Face using Inference Client
     try {
       const client = new InferenceClient(hfToken);
-      
+
+      // Resolve model id
+      const resolvedModel = mapModelToProvider(model);
+
       // Get chat completion (will simulate streaming from the complete response)
       const chatCompletion = await client.chatCompletion({
-        model: 'Qwen/Qwen2.5-7B-Instruct:together',
+        model: resolvedModel,
         messages: messages.map((msg: any) => ({
           role: msg.role === 'system' ? 'system' : msg.role === 'assistant' ? 'assistant' : 'user',
           content: msg.content,
@@ -225,7 +305,7 @@ export async function POST(request: NextRequest) {
       });
 
       const content = chatCompletion.choices[0]?.message?.content || 'No response generated';
-      
+
       // Create simulated streaming response
       const transformedStream = createStreamingResponse(content);
 
@@ -237,14 +317,10 @@ export async function POST(request: NextRequest) {
         },
       });
     } catch (error: any) {
-      console.error('Stream API Error:', error);
-      return new Response(
-        JSON.stringify({ error: error.message || 'Internal server error' }),
-        { 
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
+      console.error('Stream API Error (HF):', error);
+      // Fallback to mock streaming so the UI remains responsive
+      const fallbackMessage = `Temporary note: live model request failed (reason: ${error?.message || 'unknown error'}). Using mock response for now.\n\n` + message;
+      return createMockStreamResponse(fallbackMessage);
     }
   } catch (error: any) {
     console.error('Stream API Error:', error);
@@ -259,7 +335,15 @@ export async function POST(request: NextRequest) {
 }
 
 function mapModelToProvider(synapseModel: string): string {
-  return 'Qwen/Qwen2.5-7B-Instruct';
+  // Map internal model names to Hugging Face model repo IDs
+  switch (synapseModel) {
+    case 'synapse-creative':
+      return 'Qwen/Qwen2.5-7B-Instruct';
+    case 'synapse-precise':
+      return 'Qwen/Qwen2.5-7B-Instruct';
+    default:
+      return 'Qwen/Qwen2.5-7B-Instruct';
+  }
 }
 
 function createStreamingResponse(fullText: string): ReadableStream {
@@ -326,3 +410,4 @@ Would you like help with anything else?`;
     },
   });
 }
+

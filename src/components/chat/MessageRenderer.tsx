@@ -3,6 +3,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import DynamicChart from '../charts/DynamicChart';
+import YouTubeRecommendations from './YouTubeRecommendations';
 
 interface MessageRendererProps {
   content: string;
@@ -10,19 +11,30 @@ interface MessageRendererProps {
 }
 
 export default function MessageRenderer({ content, isDarkMode }: MessageRendererProps) {
-  // Detect if message contains chart data
+  // Detect if message contains chart or YouTube data
   const chartMatches = content.matchAll(/```chart\n([\s\S]*?)\n```/g);
-  const matches = Array.from(chartMatches);
+  const youtubeMatches = content.matchAll(/```youtube\n([\s\S]*?)\n```/g);
   
-  if (matches.length > 0) {
-    // Split content into parts: text before chart, chart, text after chart, etc.
-    const parts: Array<{ type: 'text' | 'chart', content: any }> = [];
+  const chartMatchesArray = Array.from(chartMatches);
+  const youtubeMatchesArray = Array.from(youtubeMatches);
+  
+  const hasSpecialContent = chartMatchesArray.length > 0 || youtubeMatchesArray.length > 0;
+  
+  if (hasSpecialContent) {
+    // Combine all matches and sort by position
+    const allMatches: Array<{ type: 'chart' | 'youtube', match: RegExpMatchArray }> = [
+      ...chartMatchesArray.map(m => ({ type: 'chart' as const, match: m })),
+      ...youtubeMatchesArray.map(m => ({ type: 'youtube' as const, match: m }))
+    ].sort((a, b) => (a.match.index || 0) - (b.match.index || 0));
+    
+    // Split content into parts
+    const parts: Array<{ type: 'text' | 'chart' | 'youtube', content: any }> = [];
     let lastIndex = 0;
     
-    matches.forEach(match => {
+    allMatches.forEach(({ type, match }) => {
       const matchIndex = match.index || 0;
       
-      // Add text before chart
+      // Add text before special content
       if (matchIndex > lastIndex) {
         const textBefore = content.substring(lastIndex, matchIndex);
         if (textBefore.trim()) {
@@ -30,12 +42,17 @@ export default function MessageRenderer({ content, isDarkMode }: MessageRenderer
         }
       }
       
-      // Add chart
+      // Add chart or YouTube
       try {
-        const chartData = JSON.parse(match[1]);
-        parts.push({ type: 'chart', content: chartData });
+        const data = JSON.parse(match[1]);
+        // Validate YouTube data structure
+        if (type === 'youtube' && (!data.recommendations || !Array.isArray(data.recommendations))) {
+          console.error('Invalid YouTube data structure:', data);
+        } else {
+          parts.push({ type, content: data });
+        }
       } catch (e) {
-        console.error('Failed to parse chart JSON:', e);
+        console.error(`Failed to parse ${type} JSON:`, e);
         parts.push({ type: 'text', content: match[0] }); // Show raw code block if parsing fails
       }
       
@@ -53,28 +70,42 @@ export default function MessageRenderer({ content, isDarkMode }: MessageRenderer
     // Render all parts
     return (
       <div className="space-y-2">
-        {parts.map((part, index) => (
-          part.type === 'text' ? (
-            <ReactMarkdown key={index} remarkPlugins={[remarkGfm]}>
-              {part.content}
-            </ReactMarkdown>
-          ) : (
-            <DynamicChart
-              key={index}
-              type={part.content.type}
-              data={part.content.data}
-              title={part.content.title}
-              xLabel={part.content.xLabel}
-              yLabel={part.content.yLabel}
-              isDarkMode={isDarkMode}
-            />
-          )
-        ))}
+        {parts.map((part, index) => {
+          if (part.type === 'text') {
+            return (
+              <ReactMarkdown key={index} remarkPlugins={[remarkGfm]}>
+                {part.content}
+              </ReactMarkdown>
+            );
+          } else if (part.type === 'chart') {
+            return (
+              <DynamicChart
+                key={index}
+                type={part.content.type}
+                data={part.content.data}
+                title={part.content.title}
+                xLabel={part.content.xLabel}
+                yLabel={part.content.yLabel}
+                isDarkMode={isDarkMode}
+              />
+            );
+          } else if (part.type === 'youtube') {
+            return (
+              <YouTubeRecommendations
+                key={index}
+                query={part.content.query}
+                recommendations={part.content.recommendations}
+                isDarkMode={isDarkMode}
+              />
+            );
+          }
+          return null;
+        })}
       </div>
     );
   }
   
-  // No charts, render regular markdown
+  // No special content, render regular markdown
   return (
     <ReactMarkdown remarkPlugins={[remarkGfm]}>
       {content}

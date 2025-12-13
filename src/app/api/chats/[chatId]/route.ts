@@ -25,7 +25,7 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const userId = decoded.userId;
+    const userId = decoded.id;
     const { chatId } = params;
 
     // Find chat by chatId and userId (security check)
@@ -79,7 +79,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const userId = decoded.userId;
+    const userId = decoded.id;
     const { chatId } = params;
 
     // Delete chat (ensure user owns it)
@@ -126,7 +126,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const userId = decoded.userId;
+    const userId = decoded.id;
     const { chatId } = params;
     const body = await request.json();
     const { title } = body;

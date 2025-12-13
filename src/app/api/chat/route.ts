@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = decoded.userId;
+    const userId = decoded.id;
 
     // Rate limiting
     if (!checkRateLimit(userId)) {
@@ -291,3 +291,4 @@ I suggest breaking down the problem into smaller parts and tackling each one sys
 
 **Note:** This is a mock response for development. Configure \`GEMINI_API_KEY\` in your environment variables for real AI responses.`;
 }
+

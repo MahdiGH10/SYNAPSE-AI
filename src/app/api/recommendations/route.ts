@@ -24,14 +24,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Classify all documents
-    const classifications = await classifyDocuments(documents);
+    const classificationsResponse = await classifyDocuments(documents);
+    const classifications = classificationsResponse.results || [];
     
     const recommendations: SmartRecommendation[] = [];
 
     // 1. Category Pattern Analysis
     const categoryCount: Record<string, number> = {};
     classifications.forEach(c => {
-      if (c.success && c.prediction) {
+      if (c.prediction) {
         categoryCount[c.prediction] = (categoryCount[c.prediction] || 0) + 1;
       }
     });

@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
 
     const token = authHeader.replace('Bearer ', '');
     const decoded = verifyToken(token);
-    const userId = decoded.userId;
+    const userId = decoded.id;
 
     const { action, workspaceId, documentName, documentContent } = await request.json();
 
@@ -176,3 +176,4 @@ function extractTags(content: string, category: string): string[] {
 
   return tags.slice(0, 5); // Limit to 5 tags
 }
+
