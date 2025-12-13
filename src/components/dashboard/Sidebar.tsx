@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   MessageSquare,
-  Settings,
+
   User,
   Sparkles,
   ChevronLeft,
@@ -27,7 +27,6 @@ const navigation = [
   {name: "exercice", href: "/exercice", icon: FileText},
   { name: "community", href: "Post", icon: Podcast },
   { name: "Profile", href: "/profile", icon: User },
-  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export default function Sidebar({ onCollapse }: SidebarProps) {

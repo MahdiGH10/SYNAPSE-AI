@@ -6,7 +6,14 @@ import {
   useImperativeHandle,
   useState,
 } from "react";
-import { PlusCircle, FileText, Loader2, AlertCircle, Trash2 } from "lucide-react";
+import {
+  PlusCircle,
+  FileText,
+  Loader2,
+  AlertCircle,
+  Trash2,
+  Star,
+} from "lucide-react";
 import { useExercice } from "@/hooks/ExerciceHook";
 
 export interface SidebarExercicesHandle {
@@ -19,9 +26,16 @@ interface SidebarExercicesProps {
   isDarkMode: boolean;
   onNewExercice: () => void;
   onSelectExercice?: (exercice: any) => void;
-  onDeleteExercice?: (deletedId: string) => void; // callback to parent when an item is deleted
+  onDeleteExercice?: (deletedId: string) => void;
   activeExerciceId?: string | null;
 }
+
+type FavorReaction = {
+  _id: string;
+  Exercice: string;
+  userID: string;
+  type: "like" | "dislike";
+};
 
 const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProps>(
   ({ userId, isDarkMode, onNewExercice, onSelectExercice, onDeleteExercice, activeExerciceId }, ref) => {
@@ -29,6 +43,13 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
     const [exercices, setExercices] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    // map exerciceId -> my reaction type
+    const [favByExId, setFavByExId] = useState<Record<string, "like" | "dislike" | null>>({});
+    const [loadingFav, setLoadingFav] = useState(false);
+    const [savingFavId, setSavingFavId] = useState<string | null>(null);
+
+    const FAVOR_API = "/api/favor";
 
     const load = async () => {
       if (!userId) return;
@@ -38,7 +59,6 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
         const res = await fetchExercicesByUser(userId);
         const list = Array.isArray(res?.data) ? res.data : res;
 
-        // sort newest first if createdAt available
         const arr = Array.isArray(list) ? [...list] : [];
         arr.sort((a, b) => {
           const ta = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
@@ -68,7 +88,6 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
       }, 50);
     };
 
-    // DELETE handler in the sidebar (optimistic update + rollback)
     const handleDelete = async (id: string) => {
       if (!id) return;
       if (!userId) {
@@ -79,25 +98,20 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
       const confirmDelete = window.confirm("Delete this exercise? This action cannot be undone.");
       if (!confirmDelete) return;
 
-      // keep snapshot for rollback
       const prev = [...exercices];
-      // optimistic UI: remove immediately
       setExercices((s) => s.filter((e) => e._id !== id));
       setError(null);
 
       try {
         const res = await fetch(`/api/Exercice/${encodeURIComponent(userId)}`, {
           method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id }),
         });
 
         const json = await res.json().catch(() => null);
 
         if (!res.ok) {
-          // rollback on failure
           setExercices(prev);
           const msg = json?.message || "Deletion failed";
           setError(msg);
@@ -105,13 +119,97 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
           return;
         }
 
-        // success: notify parent
         onDeleteExercice?.(id);
       } catch (err: any) {
-        // rollback on error
         setExercices(prev);
         setError(err?.message || "Network error during deletion");
         console.error("Delete error:", err);
+      }
+    };
+
+    // Load favorites (1 request per exercise; matches your current API)
+    useEffect(() => {
+      let mounted = true;
+
+      const ids = exercices.map((e) => String(e._id)).filter(Boolean);
+      if (!userId || ids.length === 0) {
+        setFavByExId({});
+        return;
+      }
+
+      const loadFav = async () => {
+        setLoadingFav(true);
+        try {
+          const entries = await Promise.all(
+            ids.map(async (id) => {
+              try {
+                const res = await fetch(`${FAVOR_API}?Exercice=${encodeURIComponent(id)}`, {
+                  method: "GET",
+                  headers: { Accept: "application/json" },
+                  cache: "no-store",
+                });
+                if (!res.ok) return [id, null] as const;
+
+                const json = await res.json().catch(() => ({ data: [] }));
+                const data: FavorReaction[] = Array.isArray(json?.data) ? json.data : [];
+                const mine = data.find((r) => r.userID === userId);
+                return [id, (mine?.type ?? null)] as const;
+              } catch {
+                return [id, null] as const;
+              }
+            })
+          );
+
+          if (!mounted) return;
+
+          const next: Record<string, "like" | "dislike" | null> = {};
+          for (const [id, t] of entries) next[id] = t;
+          setFavByExId(next);
+        } finally {
+          if (mounted) setLoadingFav(false);
+        }
+      };
+
+      loadFav();
+
+      return () => {
+        mounted = false;
+      };
+    }, [exercices, userId]);
+
+    const toggleFavorite = async (exerciceId: string) => {
+      if (!userId) return alert("You must be logged in.");
+      if (!exerciceId) return;
+
+      const current = favByExId[exerciceId] ?? null;
+      const nextType: "like" | "dislike" = current === "like" ? "dislike" : "like";
+
+      // optimistic
+      setFavByExId((prev) => ({ ...prev, [exerciceId]: nextType }));
+
+      try {
+        setSavingFavId(exerciceId);
+
+        const res = await fetch(FAVOR_API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({
+            Exercice: exerciceId,
+            userID: userId,
+            type: nextType,
+          }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ message: "Failed" }));
+          throw new Error(err?.message || "Failed to save favorite");
+        }
+      } catch (e) {
+        console.error(e);
+        // rollback
+        setFavByExId((prev) => ({ ...prev, [exerciceId]: current }));
+      } finally {
+        setSavingFavId(null);
       }
     };
 
@@ -172,7 +270,9 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
           {error && (
             <div
               className={`flex items-start gap-2 p-3 rounded-xl text-xs ${
-                isDarkMode ? "bg-red-500/10 border border-red-500/30 text-red-300" : "bg-red-50 border border-red-200 text-red-700"
+                isDarkMode
+                  ? "bg-red-500/10 border border-red-500/30 text-red-300"
+                  : "bg-red-50 border border-red-200 text-red-700"
               }`}
             >
               <AlertCircle className="w-4 h-4 mt-0.5" />
@@ -189,6 +289,10 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
           {!loading &&
             exercices.map((ex: any) => {
               const isActive = activeExerciceId === ex._id;
+              const exId = String(ex._id);
+
+              const myFavType = favByExId[exId] ?? null;
+              const isFav = myFavType === "like";
 
               return (
                 <div key={ex._id} className="relative">
@@ -211,10 +315,17 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
                         {ex.title || "Sans titre"}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between w-full">
-                      <span className={`text-[11px] uppercase tracking-wide ${isDarkMode ? "text-gray-400" : "text-gray-600"}`}>
+
+                    {/* 🔧 date moved down (= "decalate the date") */}
+                    <div className="flex flex-col gap-0.5 w-full">
+                      <span
+                        className={`text-[11px] uppercase tracking-wide ${
+                          isDarkMode ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         {ex.type || "type inconnu"}
                       </span>
+
                       {ex.createdAt && (
                         <span className={`text-[10px] ${isDarkMode ? "text-gray-500" : "text-gray-600"}`}>
                           {new Date(ex.createdAt).toLocaleDateString("fr-FR")}
@@ -223,14 +334,40 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
                     </div>
                   </button>
 
-                  {/* delete button (absolute positioned top-right of the item) */}
-                  <button
-                    onClick={() => handleDelete(ex._id)}
-                    title="Supprimer l'exercice"
-                    className="absolute top-1 right-1 p-1 rounded-md hover:bg-red-500/10 transition"
-                  >
-                    <Trash2 className={`w-4 h-4 ${isDarkMode ? "text-red-300" : "text-red-600"}`} />
-                  </button>
+                  {/* actions: trash on top-right, star UNDER trash */}
+                  <div className="absolute top-1 right-1 flex flex-col items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDelete(exId);
+                      }}
+                      title="Supprimer l'exercice"
+                      className="p-1 rounded-md hover:bg-red-500/10 transition"
+                    >
+                      <Trash2 className={`w-4 h-4 ${isDarkMode ? "text-red-300" : "text-red-600"}`} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleFavorite(exId);
+                      }}
+                      title={isFav ? "Unfavorite" : "Favorite"}
+                      disabled={savingFavId === exId || loadingFav}
+                      className="p-1 rounded-md hover:bg-yellow-500/10 transition disabled:opacity-60"
+                    >
+                      <Star
+                        className={`w-4 h-4 ${
+                          isFav ? "text-yellow-400" : isDarkMode ? "text-gray-400" : "text-gray-500"
+                        }`}
+                        fill={isFav ? "currentColor" : "transparent"}
+                      />
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -239,7 +376,7 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
         {/* Footer note */}
         <div className="px-4 py-3 border-t border-white/10 text-[10px]">
           <span className={isDarkMode ? "text-gray-500" : "text-gray-600"}>
-            Historique stocké côté serveur. Sélectionnez un exercice pour le rouvrir.
+            Synapse AI &copy; 2025
           </span>
         </div>
       </aside>
@@ -248,5 +385,4 @@ const SidebarExercices = forwardRef<SidebarExercicesHandle, SidebarExercicesProp
 );
 
 SidebarExercices.displayName = "SidebarExercices";
-
 export default SidebarExercices;

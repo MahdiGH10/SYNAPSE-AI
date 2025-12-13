@@ -1,3 +1,5 @@
+{/* Mobile Menu x
+
 "use client";
 
 import { motion } from "framer-motion";
@@ -20,7 +22,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
       }}
     >
       <div className="flex items-center justify-between px-6 py-4">
-        {/* Mobile Menu */}
+        
         <button
           onClick={onMenuClick}
           className="lg:hidden rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white transition-colors"
@@ -28,7 +30,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
           <Menu className="h-5 w-5" />
         </button>
 
-        {/* Search */}
+        
         <div className="flex-1 max-w-md">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -52,9 +54,9 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
           </div>
         </div>
 
-        {/* Right Actions */}
+       
         <div className="flex items-center gap-3 ml-4">
-          {/* Notifications */}
+          
           <Dropdown
             trigger={
               <motion.button
@@ -87,3 +89,4 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
     </motion.header>
   );
 }
+{/* Mobile Menu */}

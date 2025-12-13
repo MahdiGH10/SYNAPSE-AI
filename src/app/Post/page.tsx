@@ -3,9 +3,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Sidebar from "@/components/dashboard/Sidebar";
-import Topbar from "@/components/dashboard/Topbar";
+
 import { Plus, Send, Upload, Sun, Moon } from "lucide-react";
 import PostCard from "@/components/PostCard";
+import { useRouter } from "next/navigation";
+
 
 type PostType = {
   _id?: string;
@@ -25,6 +27,7 @@ export default function PostsPage() {
   const [isPosting, setIsPosting] = useState(false);
   const [posts, setPosts] = useState<PostType[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
+  const router = useRouter();
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -33,6 +36,14 @@ export default function PostsPage() {
   const getLocalUserId = () => (typeof window !== "undefined" ? localStorage.getItem("userId") || "" : "");
   const getLocalUserName = () => (typeof window !== "undefined" ? localStorage.getItem("userName") || "" : "");
   const getLocalUserImage = () => (typeof window !== "undefined" ? localStorage.getItem("userImage") || "" : "");
+      useEffect(() => {
+        if (typeof window !== "undefined") {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            router.replace("/login");
+          }
+        }
+      }, [router]);
 
   useEffect(() => {
     // fetch posts
@@ -141,7 +152,7 @@ export default function PostsPage() {
         transition={{ duration: 0.25 }}
         className="flex-1 flex flex-col"
       >
-        <Topbar />
+        
 
         <div className="flex-1 overflow-y-auto p-8">
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto">

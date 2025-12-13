@@ -16,6 +16,7 @@ import { useExercice } from "@/hooks/ExerciceHook";
 import SidebarExercices, {
   SidebarExercicesHandle,
 } from "@/app/exercice/components/SidebarExercices";
+import { useRouter } from "next/navigation";
 
 type QuestionKind = "qcm" | "problemes" | "etudes_de_cas";
 
@@ -58,6 +59,15 @@ function TypeSelect({
     OPTIONS.findIndex((o) => o.value === value)
   );
   const ref = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
+      useEffect(() => {
+        if (typeof window !== "undefined") {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            router.replace("/login");
+          }
+        }
+      }, [router]);
 
   useEffect(() => {
     if (!open) return;

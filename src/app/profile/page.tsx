@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Sidebar from "@/components/dashboard/Sidebar";
-import Topbar from "@/components/dashboard/Topbar";
+
 import { Camera, Save } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 
@@ -259,7 +259,7 @@ export default function ProfilePage() {
         transition={{ duration: 0.3 }}
         className="flex-1 flex flex-col"
       >
-        <Topbar />
+        
 
         <div className="flex-1 overflow-y-auto p-8">
           <motion.div

@@ -4,6 +4,7 @@ import { Send, Plus, Menu, Sparkles, Zap, Trash2, Copy, Sun, Moon, MessageSquare
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import MessageRenderer from '@/components/chat/MessageRenderer';
+import { useRouter } from 'next/navigation';
 
 interface Message {
   id: string;
@@ -48,6 +49,19 @@ export default function ChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const activeChat = chats.find(c => c.id === activeChatId);
   const isChatEmpty = !activeChat || activeChat.messages.length === 0;
+
+
+
+  const router = useRouter();
+
+    useEffect(() => {
+      if (typeof window !== "undefined") {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          router.replace("/login");
+        }
+      }
+    }, [router]);
 
   /* ---------- Load user's chats from database on mount ---------- */
   useEffect(() => {
