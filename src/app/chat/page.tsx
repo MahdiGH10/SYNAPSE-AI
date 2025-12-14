@@ -1,10 +1,12 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Plus, Menu, Sparkles, Zap, Trash2, Copy, Sun, Moon, MessageSquare, Bot, Upload, FileText, X } from 'lucide-react';
+import Image from 'next/image';
+import { Send, Plus, Menu, Sparkles, Zap, Trash2, Copy, Sun, Moon, MessageSquare, Bot, Upload, FileText, X, ArrowLeft } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import MessageRenderer from '@/components/chat/MessageRenderer';
 import { useRouter } from 'next/navigation';
+import { useProtectUserRoute } from '@/hooks/useProtectUserRoute';
 
 interface Message {
   id: string;
@@ -39,6 +41,8 @@ interface Chat {
 }
 
 export default function ChatInterface() {
+  useProtectUserRoute(); // Protect from admin access
+  
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeChatId, setActiveChatId] = useState<string>('');
   const [isLoadingChats, setIsLoadingChats] = useState(true);
@@ -104,6 +108,10 @@ export default function ChatInterface() {
     if (files.length > 0) {
       const file = files[0]; // Handle first file
       await processFileUpload(file);
+      // Reset file input to allow re-uploading
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -436,6 +444,10 @@ export default function ChatInterface() {
     const file = e.target.files?.[0];
     if (!file) return;
     await processFileUpload(file);
+    // Reset input value to allow re-uploading the same file
+    if (e.target) {
+      e.target.value = '';
+    }
   };
 
   /* ---------- Send message ---------- */
@@ -745,14 +757,30 @@ export default function ChatInterface() {
           {/* Header */}
           <div className={`h-16 backdrop-blur-2xl ${isDarkMode ? 'bg-gradient-to-r from-[#1a1f2e]/80 to-[#1a1f2e]/50' : 'bg-white/80'} border-b ${isDarkMode ? 'border-white/10' : 'border-blue-200'} flex items-center px-4 md:px-6 shadow-2xl`}>
             <button
+              onClick={() => router.back()}
+              className="p-3 hover:bg-white/10 rounded-2xl transition-all duration-300 group mr-2"
+              title="Go back"
+            >
+              <ArrowLeft size={20} className="text-cyan-300 group-hover:-translate-x-1 transition-transform duration-300" />
+            </button>
+            <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="p-3 hover:bg-white/10 rounded-2xl transition-all duration-300 group"
             >
               <Menu size={22} className="group-hover:rotate-180 transition-transform duration-500 text-cyan-300" />
             </button>
-            <h1 className="text-xl md:text-2xl font-black bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 bg-clip-text text-transparent animate-shimmer ml-3">
-              SynapseAI
-            </h1>
+            <div className="flex items-center gap-3 ml-3">
+              <Image
+                src="/logo.png"
+                alt="SynapseAI Logo"
+                width={55}
+                height={55}
+                className="flex-shrink-0"
+              />
+              <h1 className="text-xl md:text-2xl font-black bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 bg-clip-text text-transparent animate-shimmer">
+                SynapseAI
+              </h1>
+            </div>
             <div className="ml-auto flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-cyan-400 animate-pulse shadow-lg shadow-cyan-400/50" />
@@ -800,20 +828,20 @@ export default function ChatInterface() {
 
                     {/* Compact document indicator - ChatGPT style */}
                     {uploadedDocs.length > 0 && (
-                      <div className={`mb-3 px-3 py-2 rounded-lg flex items-center gap-2 text-sm w-fit ${
+                      <div className={`mb-3 px-3 py-2 rounded-lg flex items-center gap-2 text-sm max-w-xs ${
                         isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
                       }`}>
                         <FileText size={14} className="text-blue-500 flex-shrink-0" />
-                        <div className="flex items-center gap-2">
-                          <span className={`font-medium ${
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <span className={`font-medium whitespace-nowrap ${
                             isDarkMode ? 'text-gray-300' : 'text-gray-700'
                           }`}>
                             {uploadedDocs.length} {uploadedDocs.length > 1 ? 'files' : 'file'}
                           </span>
-                          <span className={`text-xs ${
+                          <span className={`text-xs truncate ${
                             isDarkMode ? 'text-gray-500' : 'text-gray-500'
                           }`}>
-                            {uploadedDocs.map(d => d.name).join(', ').substring(0, 50)}{uploadedDocs.map(d => d.name).join(', ').length > 50 ? '...' : ''}
+                            {uploadedDocs.map(d => d.name).join(', ')}
                           </span>
                         </div>
                         <button
@@ -957,8 +985,14 @@ export default function ChatInterface() {
                           ) : message.role === 'assistant' ? (
                             // AI Message - Left aligned with avatar
                             <div className="flex gap-4 items-start">
-                              <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 shadow-lg shadow-cyan-400/20">
-                                <span className="text-sm font-bold text-white">S</span>
+                              <div className="w-14 h-14 flex items-center justify-center flex-shrink-0">
+                                <Image
+                                  src="/logo.png"
+                                  alt="SynapseAI"
+                                  width={55}
+                                  height={55}
+                                  className="w-full h-full object-contain"
+                                />
                               </div>
 
                               <div className="flex-1 space-y-2 min-w-0">

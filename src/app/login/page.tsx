@@ -34,7 +34,15 @@ export default function LoginPage() {
       
       if (response.success) {
         tokenManager.set(response.data.token);
-        router.push('/dashboard');
+        
+        // Redirect based on user role
+        const userRole = response.data.user?.role;
+        
+        if (userRole === 'admin' || userRole === 'superadmin') {
+          router.push('/admin');
+        } else {
+          router.push('/dashboard');
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');

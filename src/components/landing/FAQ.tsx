@@ -6,36 +6,36 @@ import Icon from '../Icon';
 
 const faqs = [
   {
-    question: 'What AI models does SynapseAI use?',
-    answer: 'We use state-of-the-art models including GPT-4, Claude 3, and other cutting-edge AI technologies. Our platform provides access to multiple models for different use cases.',
+    question: 'What is SynapseAI?',
+    answer: 'SynapseAI is an intelligent learning platform that combines AI-powered chat, personalized exercises, collaborative workspaces, and smart analytics to enhance your learning experience.',
   },
   {
     question: 'How secure is my data?',
-    answer: 'We take security seriously. All data is encrypted end-to-end, and we never train our models on your private conversations. Your privacy and data security are our top priorities.',
+    answer: 'We take security seriously. All data is encrypted end-to-end using industry-standard protocols. Your conversations, exercises, and personal information are stored securely in MongoDB Atlas with strict access controls.',
   },
   {
     question: 'Is SynapseAI free to use?',
-    answer: 'Yes! SynapseAI is a university project designed to showcase advanced AI capabilities. You can create an account and start using all features right away.',
+    answer: 'Yes! SynapseAI is currently free for all users. Create an account and get instant access to intelligent chat, personalized exercises, document workspaces, and more.',
   },
   {
-    question: 'What can I do with SynapseAI?',
-    answer: 'You can have intelligent conversations, get help with research, analyze data, brainstorm ideas, and much more. Our AI assistant is designed to help with a wide range of tasks.',
+    question: 'What features does SynapseAI offer?',
+    answer: 'SynapseAI offers AI-powered chat with context awareness, personalized learning exercises, collaborative document workspaces, smart recommendations, progress tracking, and an integrated bug reporting system.',
   },
   {
-    question: 'How does the chat interface work?',
-    answer: 'Simply type your question or request in the chat interface, and our AI will provide detailed, context-aware responses. The conversation history is saved so the AI can maintain context throughout your session.',
+    question: 'How does the exercise system work?',
+    answer: 'Our AI analyzes your learning patterns and generates personalized exercises tailored to your skill level. You can track your progress, get instant feedback, and improve your understanding of various topics.',
   },
   {
     question: 'Can I use SynapseAI on mobile devices?',
-    answer: 'Yes! SynapseAI is fully responsive and works seamlessly on all devices including smartphones, tablets, and desktop computers.',
+    answer: 'Yes! SynapseAI is fully responsive and works seamlessly across all devices including smartphones, tablets, and desktop computers. Your progress syncs automatically across all devices.',
   },
   {
     question: 'What makes SynapseAI different?',
-    answer: 'SynapseAI combines cutting-edge AI technology with an intuitive, modern interface. It\'s designed to be fast, reliable, and easy to use while providing powerful AI capabilities.',
+    answer: 'SynapseAI combines multiple learning tools in one platform - intelligent chat, personalized exercises, collaborative workspaces, and analytics. Our AI adapts to your learning style and provides contextual recommendations.',
   },
   {
-    question: 'How can I provide feedback?',
-    answer: 'We love hearing from our users! You can reach out to us via email or through the contact form. Your feedback helps us improve SynapseAI.',
+    question: 'How can I report bugs or request features?',
+    answer: 'Use our integrated ticket system to report bugs or request features. Navigate to your dashboard and click on the support icon. Our team reviews all tickets and responds promptly.',
   },
 ];
 
@@ -47,7 +47,7 @@ const FAQ: React.FC = () => {
   };
 
   return (
-    <section id="faq" className="relative py-32 overflow-hidden" style={{ backgroundColor: '#000000' }}>
+    <section id="faq" className="relative py-32 overflow-hidden" style={{ background: 'linear-gradient(180deg, #000000 0%, #0f172a 50%, #000000 100%)' }}>
       {/* Background gradient */}
       <div className="absolute inset-0">
         <motion.div
@@ -112,12 +112,13 @@ const FAQ: React.FC = () => {
                 className="w-full text-left p-6 rounded-xl backdrop-blur-xl"
                 style={{
                   background: openIndex === index
-                    ? 'rgba(30, 41, 59, 0.8)'
-                    : 'rgba(15, 23, 42, 0.6)',
+                    ? 'linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9))'
+                    : 'linear-gradient(135deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.6))',
                   border: openIndex === index
-                    ? '1px solid rgba(6, 182, 212, 0.3)'
-                    : '1px solid rgba(59, 130, 246, 0.1)',
+                    ? '2px solid rgba(6, 182, 212, 0.5)'
+                    : '2px solid rgba(59, 130, 246, 0.2)',
                   transition: 'all 0.3s ease',
+                  boxShadow: openIndex === index ? '0 8px 32px rgba(6, 182, 212, 0.2)' : 'none',
                 }}
                 whileHover={{
                   backgroundColor: 'rgba(30, 41, 59, 0.7)',
@@ -168,8 +169,9 @@ const FAQ: React.FC = () => {
           transition={{ delay: 0.4 }}
           className="mt-16 text-center p-8 rounded-2xl backdrop-blur-xl"
           style={{
-            background: 'rgba(30, 41, 59, 0.4)',
-            border: '1px solid rgba(59, 130, 246, 0.2)',
+            background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.6))',
+            border: '2px solid rgba(59, 130, 246, 0.3)',
+            boxShadow: '0 8px 32px rgba(59, 130, 246, 0.2)',
           }}
         >
           <h3 className="text-2xl font-bold mb-3" style={{ color: '#F1F5F9' }}>

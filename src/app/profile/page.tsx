@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Sidebar from "@/components/dashboard/Sidebar";
 
-import { Camera, Save } from "lucide-react";
+import { Camera, Save, ArrowLeft } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 
 import { useProfile } from "@/hooks/useProfile";
@@ -242,6 +242,16 @@ export default function ProfilePage() {
         transition={{ duration: 0.3 }}
         className="flex-1 flex flex-col"
       >
+        {/* Back Button */}
+        <div className="p-4">
+          <button
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-all duration-300 group border border-gray-700"
+          >
+            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform duration-300" />
+            <span className="text-sm font-medium">Back</span>
+          </button>
+        </div>
         
 
         <div className="flex-1 overflow-y-auto p-8">

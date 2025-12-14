@@ -7,42 +7,42 @@ import Icon from '../Icon';
 const testimonials = [
   {
     name: 'Sarah Chen',
-    role: 'Product Manager',
-    company: 'TechCorp',
+    role: 'Computer Science Student',
+    company: 'MIT',
     avatar: '👩‍💼',
-    content: 'SynapseAI has transformed how our team works. The AI insights are incredibly accurate, and the interface is intuitive. We\'ve increased productivity by 40%!',
+    content: 'SynapseAI has transformed how I study. The personalized exercises adapt to my learning pace, and the AI chat helps me understand complex concepts. My grades improved significantly!',
     rating: 5,
   },
   {
     name: 'Michael Rodriguez',
-    role: 'Data Scientist',
-    company: 'DataFlow Inc',
+    role: 'Online Learner',
+    company: 'Self-Taught Developer',
     avatar: '👨‍💻',
-    content: 'The best AI assistant I\'ve used. It understands complex queries and provides detailed, contextual answers. The GPT-4 integration is seamless.',
+    content: 'The best learning platform I\'ve used. The AI understands my questions and provides detailed explanations. The document workspace feature is perfect for organizing notes.',
     rating: 5,
   },
   {
     name: 'Emily Thompson',
-    role: 'Startup Founder',
-    company: 'InnovateLab',
+    role: 'Teacher',
+    company: 'Lincoln High School',
     avatar: '👩‍🚀',
-    content: 'As a small startup, we needed an AI solution that scales with us. SynapseAI is perfect - affordable, powerful, and incredibly reliable.',
+    content: 'I use SynapseAI to create custom exercises for my students. The AI-powered recommendations help me identify areas where students need extra support. It\'s a game-changer!',
     rating: 5,
   },
   {
     name: 'David Kim',
-    role: 'Engineering Lead',
-    company: 'CloudSystems',
+    role: 'Graduate Student',
+    company: 'Stanford University',
     avatar: '👨‍🔧',
-    content: 'The custom integrations and API access have been game-changing for our workflow. Support team is also incredibly responsive and helpful.',
+    content: 'The collaborative workspace and smart chat features are perfect for research. I can organize documents, chat with AI about complex topics, and track my progress all in one place.',
     rating: 5,
   },
   {
     name: 'Lisa Anderson',
-    role: 'Content Creator',
-    company: 'CreativeHub',
+    role: 'Professional',
+    company: 'Tech Industry',
     avatar: '👩‍🎨',
-    content: 'I use SynapseAI daily for content research and ideation. It\'s like having a brilliant research assistant available 24/7. Absolutely love it!',
+    content: 'I use SynapseAI daily for continuous learning. The personalized exercise system keeps me sharp, and the AI assistant helps me explore new technologies. Absolutely love it!',
     rating: 5,
   },
 ];
@@ -81,7 +81,7 @@ const Testimonials: React.FC = () => {
   };
 
   return (
-    <section className="relative py-32 overflow-hidden" style={{ backgroundColor: '#000000' }}>
+    <section className="relative py-32 overflow-hidden" style={{ background: 'linear-gradient(180deg, #000000 0%, #0f172a 50%, #000000 100%)' }}>
       {/* Background gradient */}
       <div className="absolute inset-0">
         <motion.div
@@ -124,10 +124,10 @@ const Testimonials: React.FC = () => {
               background: 'linear-gradient(to right, #8B5CF6, #06B6D4)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-            }}>Thousands</span>
+            }}>Learners</span>
           </h2>
           <p className="text-xl" style={{ color: '#94A3B8' }}>
-            See what our customers have to say about SynapseAI
+            See what students, educators, and professionals say about SynapseAI
           </p>
         </motion.div>
 
@@ -151,9 +151,9 @@ const Testimonials: React.FC = () => {
                 <div
                   className="max-w-4xl mx-auto p-8 md:p-12 rounded-2xl backdrop-blur-xl"
                   style={{
-                    background: 'rgba(30, 41, 59, 0.6)',
-                    border: '1px solid rgba(139, 92, 246, 0.3)',
-                    boxShadow: '0 20px 60px rgba(139, 92, 246, 0.2)',
+                    background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.7))',
+                    border: '2px solid rgba(139, 92, 246, 0.4)',
+                    boxShadow: '0 20px 60px rgba(139, 92, 246, 0.3)',
                   }}
                 >
                   {/* Stars */}
@@ -233,7 +233,7 @@ const Testimonials: React.FC = () => {
             whileHover={{ scale: 1.1, x: -4 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Icon name="chevron-left" size={24} style={{ color: '#60A5FA' }} />
+            <Icon name="chevron-left" size={24} className="text-blue-400" />
           </motion.button>
 
           <motion.button
@@ -246,7 +246,7 @@ const Testimonials: React.FC = () => {
             whileHover={{ scale: 1.1, x: 4 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Icon name="chevron-right" size={24} style={{ color: '#60A5FA' }} />
+            <Icon name="chevron-right" size={24} className="text-blue-400" />
           </motion.button>
         </div>
 
@@ -260,8 +260,8 @@ const Testimonials: React.FC = () => {
         >
           {[
             { value: '4.9/5', label: 'Average Rating' },
-            { value: '10k+', label: 'Happy Users' },
-            { value: '50k+', label: 'Reviews' },
+            { value: '10k+', label: 'Active Learners' },
+            { value: '50k+', label: 'Exercises Completed' },
             { value: '99%', label: 'Satisfaction' },
           ].map((stat, index) => (
             <motion.div

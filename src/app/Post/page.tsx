@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Sidebar from "@/components/dashboard/Sidebar";
 
-import { Plus, Send, Upload, Sun, Moon } from "lucide-react";
+import { Plus, Send, Upload, Sun, Moon, ArrowLeft } from "lucide-react";
 import PostCard from "@/components/PostCard";
 import { useRouter } from "next/navigation";
 

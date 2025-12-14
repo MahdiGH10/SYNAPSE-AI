@@ -20,9 +20,24 @@ export default function GoogleCallbackPage() {
     }
 
     if (token) {
-      // Save token and redirect to dashboard
+      // Save token
       tokenManager.set(token);
-      router.push('/dashboard');
+      
+      // Decode token to get user role
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userRole = payload.role;
+        
+        // Redirect based on role
+        if (userRole === 'admin' || userRole === 'superadmin') {
+          router.push('/admin');
+        } else {
+          router.push('/dashboard');
+        }
+      } catch {
+        // If decode fails, redirect to dashboard
+        router.push('/dashboard');
+      }
     } else {
       // No token, redirect to login
       router.push('/login');

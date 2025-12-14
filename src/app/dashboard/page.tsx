@@ -13,8 +13,10 @@ import {
   Zap,
   ArrowRight,
   Bot,
+  ArrowLeft,
 } from "lucide-react";
 import { getUserFromSession } from "@/lib/usesession";
+import { useProtectUserRoute } from "@/hooks/useProtectUserRoute";
 
 const stats = [
   { name: "Total Conversations", value: "127", change: "+12%", trend: "up", icon: MessageSquare },
@@ -40,6 +42,8 @@ type FavorReaction = {
 };
 
 export default function DashboardPage() {
+  useProtectUserRoute(); // Protect from admin access
+  
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();

@@ -47,7 +47,7 @@ const Footer: React.FC = () => {
     <footer
       className="text-white relative overflow-hidden py-16"
       style={{
-        background: 'linear-gradient(180deg, #000000 0%, #0A0E1A 50%, #000000 100%)',
+        background: 'linear-gradient(180deg, #000000 0%, #0f172a 50%, #000000 100%)',
       }}
     >
       {/* Gradient blend at top to avoid separation */}
@@ -81,7 +81,7 @@ const Footer: React.FC = () => {
               </span>
             </Link>
             <p className="text-sm mb-6 max-w-xs" style={{ color: '#94A3B8', lineHeight: '1.6' }}>
-              AI-powered workflows that scale with your ambition.
+              Intelligent learning platform powered by cutting-edge AI technology.
             </p>
 
             {/* Newsletter */}

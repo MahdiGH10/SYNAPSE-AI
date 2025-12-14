@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -77,13 +78,14 @@ export default function Sidebar({ onCollapse }: SidebarProps) {
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
           {!collapsed && (
             <Link href="/" className="flex items-center gap-3">
-              <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{
-                  background: "linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)",
-                }}
-              >
-                <Sparkles className="w-5 h-5 text-white" />
+              <div className="w-14 h-14 flex items-center justify-center">
+                <Image
+                  src="/logo.png"
+                  alt="SynapseAI Logo"
+                  width={55}
+                  height={55}
+                  className="w-full h-full object-contain"
+                />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                 SynapseAI

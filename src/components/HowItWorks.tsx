@@ -7,20 +7,20 @@ import Icon from './Icon';
 const steps = [
   {
     number: '01',
-    title: 'Connect Your Data',
-    description: 'Seamlessly integrate with your existing tools and workflows in minutes',
-    icon: 'zap',
+    title: 'Create Your Account',
+    description: 'Sign up in seconds and get instant access to AI-powered learning and collaboration tools',
+    icon: 'user-plus',
   },
   {
     number: '02',
-    title: 'AI Does the Work',
-    description: 'Our intelligent system analyzes, automates, and optimizes your processes',
-    icon: 'cpu',
+    title: 'Learn & Collaborate',
+    description: 'Access intelligent chat, personalized exercises, and collaborative workspace features',
+    icon: 'brain',
   },
   {
     number: '03',
-    title: 'Scale & Succeed',
-    description: 'Watch your productivity soar with real-time insights and automation',
+    title: 'Track Your Progress',
+    description: 'Monitor your learning journey with smart analytics and personalized recommendations',
     icon: 'trending-up',
   },
 ];
@@ -30,7 +30,7 @@ const HowItWorks: React.FC = () => {
     <section 
       className="relative py-32 overflow-hidden"
       style={{ 
-        background: 'linear-gradient(180deg, #000000 0%, #0A0E1A 50%, #000000 100%)',
+        background: 'linear-gradient(180deg, #000000 0%, #0f172a 50%, #000000 100%)',
       }}
     >
       {/* Header */}
@@ -55,7 +55,7 @@ const HowItWorks: React.FC = () => {
             className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 max-w-4xl mx-auto"
             style={{ color: '#F1F5F9' }}
           >
-            Get Started in{' '}
+            Start Learning in{' '}
             <span
               className="bg-clip-text text-transparent"
               style={{
@@ -66,7 +66,7 @@ const HowItWorks: React.FC = () => {
             </span>
           </h2>
           <p className="text-lg sm:text-xl max-w-2xl mx-auto" style={{ color: '#CBD5E1' }}>
-            From setup to success in under 10 minutes
+            Begin your intelligent learning journey in minutes
           </p>
         </motion.div>
       </div>
@@ -89,9 +89,10 @@ const HowItWorks: React.FC = () => {
                   transition={{ type: 'spring', damping: 20, stiffness: 300 }}
                   className="relative p-8 rounded-2xl h-full"
                   style={{
-                    background: 'rgba(30, 41, 59, 0.4)',
-                    border: '1px solid rgba(59, 130, 246, 0.2)',
+                    background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.5))',
+                    border: '2px solid rgba(59, 130, 246, 0.3)',
                     backdropFilter: 'blur(20px)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
                   }}
                 >
                   {/* Glow effect on hover */}

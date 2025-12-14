@@ -5,9 +5,12 @@ import { generateToken } from '@/lib/jwt';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Login attempt started');
     await connectDB();
+    console.log('DB connected');
 
     const { email, password } = await request.json();
+    console.log('Login attempt for:', email);
 
     // Validation
     if (!email || !password) {
@@ -19,6 +22,7 @@ export async function POST(request: NextRequest) {
 
     // Find user and include password
     const user = await User.findOne({ email }).select('+password');
+    console.log('User found:', !!user, 'Has password:', !!user?.password);
     
     if (!user) {
       return NextResponse.json(
@@ -39,7 +43,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check password
+    console.log('Comparing password...');
     const isPasswordMatch = await user.comparePassword(password);
+    console.log('Password match:', isPasswordMatch);
     
     if (!isPasswordMatch) {
       return NextResponse.json(
@@ -49,6 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if email is verified
+    console.log('User verified:', user.verified);
     if (!user.verified) {
       return NextResponse.json(
         {
@@ -63,8 +70,10 @@ export async function POST(request: NextRequest) {
     user.lastLogin = new Date();
     await user.save();
 
-    // Generate JWT token
-    const token = generateToken(user.id.toString(), user.email, user.name);
+    // Generate JWT token with role
+    console.log('Generating token for user:', user._id.toString(), 'role:', user.role);
+    const token = generateToken(user._id.toString(), user.email, user.name, user.role);
+    console.log('Token generated successfully');
 
     return NextResponse.json(
       {
@@ -84,7 +93,8 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
   } catch (error: any) {
-    console.error('Login error:', error);
+    console.error('Login error details:', error);
+    console.error('Error stack:', error.stack);
     return NextResponse.json(
       { success: false, message: error.message || 'Login failed' },
       { status: 500 }

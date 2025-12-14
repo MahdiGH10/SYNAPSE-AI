@@ -47,8 +47,14 @@ export default function GoogleCallbackPage() {
           if (data.token) {
             // Store JWT token
             tokenManager.set(data.token);
-            // Redirect to dashboard
-            router.push('/dashboard');
+            
+            // Redirect based on user role
+            const userRole = data.user?.role;
+            if (userRole === 'admin' || userRole === 'superadmin') {
+              router.push('/admin');
+            } else {
+              router.push('/dashboard');
+            }
           } else {
             throw new Error('No token received');
           }

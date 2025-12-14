@@ -35,14 +35,14 @@ const Newsletter: React.FC = () => {
 
     // Simulate API call
     setTimeout(() => {
-      showToast('Successfully subscribed to newsletter!', 'success');
+      showToast('success', 'Successfully subscribed to newsletter!');
       setEmail('');
       setIsLoading(false);
     }, 1500);
   };
 
   return (
-    <section className="relative py-32 overflow-hidden" style={{ backgroundColor: '#000000' }}>
+    <section className="relative py-32 overflow-hidden" style={{ background: 'linear-gradient(180deg, #000000 0%, #0f172a 50%, #000000 100%)' }}>
       {/* Background gradient */}
       <div className="absolute inset-0">
         <motion.div
@@ -70,9 +70,9 @@ const Newsletter: React.FC = () => {
           transition={{ duration: 0.8 }}
           className="p-8 md:p-12 rounded-3xl backdrop-blur-xl text-center"
           style={{
-            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%)',
-            border: '1px solid rgba(59, 130, 246, 0.3)',
-            boxShadow: '0 20px 80px rgba(59, 130, 246, 0.3)',
+            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%)',
+            border: '2px solid rgba(59, 130, 246, 0.4)',
+            boxShadow: '0 20px 80px rgba(59, 130, 246, 0.4)',
           }}
         >
           {/* Icon */}
@@ -103,7 +103,7 @@ const Newsletter: React.FC = () => {
               background: 'linear-gradient(to right, #3B82F6, #8B5CF6)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
-            }}>AI Insights</span>
+            }}>Learning Updates</span>
           </motion.h2>
 
           <motion.p
@@ -114,7 +114,7 @@ const Newsletter: React.FC = () => {
             className="text-lg mb-8 max-w-2xl mx-auto"
             style={{ color: '#CBD5E1' }}
           >
-            Join 50,000+ professionals getting weekly tips, product updates, and exclusive AI strategies delivered to your inbox.
+            Join thousands of learners receiving exclusive study tips, new exercises, platform updates, and AI-powered learning strategies.
           </motion.p>
 
           {/* Form */}
@@ -225,7 +225,7 @@ const Newsletter: React.FC = () => {
             </div>
             <div className="flex items-center gap-2">
               <Icon name="users" size={18} className="text-purple-400" />
-              <span>50k+ subscribers</span>
+              <span>10k+ active learners</span>
             </div>
           </motion.div>
 
@@ -239,10 +239,10 @@ const Newsletter: React.FC = () => {
             style={{ borderColor: 'rgba(59, 130, 246, 0.2)' }}
           >
             <p className="text-sm mb-4" style={{ color: '#64748B' }}>
-              Trusted by leading companies
+              Trusted by learners worldwide
             </p>
             <div className="flex flex-wrap items-center justify-center gap-8 opacity-50">
-              {['Google', 'Microsoft', 'Amazon', 'Meta', 'Apple'].map((company) => (
+              {['Students', 'Educators', 'Professionals', 'Researchers', 'Teams'].map((company) => (
                 <span
                   key={company}
                   className="text-lg font-semibold"

@@ -5,13 +5,16 @@ const JWT_EXPIRE = process.env.JWT_EXPIRE || '7d';
 
 export interface TokenPayload {
   id: string;
+  userId: string;
   email?: string;
+  role?: string;
 }
 
-export function generateToken(userId: string, email?: string, name?:string): string {
-  const payload: TokenPayload = { id: userId };
+export function generateToken(userId: string, email?: string, name?:string, role?: string): string {
+  const payload: TokenPayload = { id: userId, userId };
   if (email) payload.email = email;
   if (name) (payload as any).name = name;
+  if (role) payload.role = role;
   
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: JWT_EXPIRE,

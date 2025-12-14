@@ -42,8 +42,8 @@ export async function POST(request: NextRequest) {
     user.lastLogin = new Date();
     await user.save();
 
-    // Generate JWT token for our app
-    const token = generateToken(user.id.toString(), user.email);
+    // Generate JWT token for our app with role
+    const token = generateToken(user.id.toString(), user.email, user.name, user.role);
 
     return NextResponse.json({ 
       success: true,
@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
         email: user.email,
         name: user.name,
         image: user.image,
+        role: user.role,
       }
     });
   } catch (error) {

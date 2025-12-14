@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { navLinks } from '@/lib/data';
@@ -46,62 +47,22 @@ const Navbar: React.FC = () => {
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center space-x-3 group"
+            className="flex items-center space-x-2 group"
             aria-label="SynapseAI Home"
           >
             <motion.div
-              whileHover={{ scale: 1.05, rotate: 5 }}
+              whileHover={{ scale: 1.05 }}
               transition={{ type: 'spring', damping: 15, stiffness: 300 }}
-              className="relative"
+              className="w-12 h-12 flex items-center justify-center"
             >
-              {/* Outer glow ring */}
-              <div
-                className="absolute inset-0 rounded-2xl blur-md opacity-60"
-                style={{
-                  background: 'linear-gradient(135deg, #3B82F6, #8B5CF6, #06B6D4)',
-                }}
+              <Image
+                src="/logo.png"
+                alt="SynapseAI Logo"
+                width={48}
+                height={48}
+                className="w-full h-full object-contain"
+                priority
               />
-              {/* Logo container */}
-              <div
-                className="relative w-11 h-11 rounded-2xl flex items-center justify-center overflow-hidden"
-                style={{
-                  background: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 50%, #06B6D4 100%)',
-                  boxShadow: '0 8px 24px rgba(59, 130, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
-                }}
-              >
-                {/* Neural network pattern overlay */}
-                <svg
-                  viewBox="0 0 44 44"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-full h-full"
-                >
-                  {/* Connection lines */}
-                  <g opacity="0.3" stroke="white" strokeWidth="1.5" strokeLinecap="round">
-                    <line x1="22" y1="12" x2="15" y2="22" />
-                    <line x1="22" y1="12" x2="29" y2="22" />
-                    <line x1="15" y1="22" x2="22" y2="32" />
-                    <line x1="29" y1="22" x2="22" y2="32" />
-                  </g>
-                  {/* Nodes */}
-                  <g fill="white">
-                    <circle cx="22" cy="12" r="3.5" opacity="0.9" />
-                    <circle cx="15" cy="22" r="3" opacity="0.85" />
-                    <circle cx="29" cy="22" r="3" opacity="0.85" />
-                    <circle cx="22" cy="32" r="3.5" opacity="0.9" />
-                  </g>
-                  {/* Center pulse */}
-                  <motion.circle
-                    cx="22"
-                    cy="22"
-                    r="2"
-                    fill="white"
-                    initial={{ scale: 0.8, opacity: 0.6 }}
-                    animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.6, 1, 0.6] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                </svg>
-              </div>
             </motion.div>
             <div className="flex flex-col">
               <span

@@ -183,6 +183,7 @@ function TypeSelect({
 
 export default function Page() {
   const { createExercice } = useExercice();
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [questionType, setQuestionType] = useState<QuestionKind>("qcm");
@@ -599,6 +600,14 @@ export default function Page() {
 
   const FormView = () => (
     <main className="flex-1 flex items-center justify-center px-4 py-12 relative">
+      {/* Back Button */}
+      <button
+        onClick={() => router.back()}
+        className="absolute top-6 left-6 flex items-center gap-2 px-4 py-2 bg-gray-800/50 hover:bg-gray-700/50 text-white rounded-lg transition-all duration-300 group border border-gray-700/50 backdrop-blur-sm"
+      >
+        <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform duration-300" />
+        <span className="text-sm font-medium">Back</span>
+      </button>
       <div className="w-full max-w-2xl">
         <div className="text-center mb-12">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-400 shadow-2xl shadow-cyan-400/30 mb-6">

@@ -203,8 +203,8 @@ const FeatureSection: React.FC<{ feature: Feature; index: number; onInView: (ind
               }}
               className="relative rounded-3xl overflow-hidden"
               style={{
-                border: '1px solid rgba(59, 130, 246, 0.2)',
-                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5), 0 0 1px rgba(59, 130, 246, 0.3) inset',
+                border: '2px solid rgba(59, 130, 246, 0.3)',
+                boxShadow: '0 20px 60px rgba(0, 0, 0, 0.6), 0 0 2px rgba(59, 130, 246, 0.4) inset',
                 transformStyle: 'preserve-3d',
                 perspective: '1000px',
               }}
@@ -273,7 +273,7 @@ const Features: React.FC = () => {
     <section
       id="features"
       className="relative overflow-hidden"
-      style={{ background: 'linear-gradient(180deg, #000000 0%, #0A0E1A 30%, #0A0E1A 70%, #000000 100%)' }}
+      style={{ background: 'linear-gradient(180deg, #000000 0%, #0f172a 30%, #0f172a 70%, #000000 100%)' }}
     >
       {/* Progress Indicator - Right Side */}
       <div className="fixed right-8 top-1/2 -translate-y-1/2 z-50 hidden lg:flex flex-col gap-3">
@@ -344,11 +344,11 @@ const Features: React.FC = () => {
                 backgroundImage: 'linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%)',
               }}
             >
-              Scale Your Workflow
+              Accelerate Your Learning
             </span>
           </h2>
           <p className="text-lg sm:text-xl max-w-3xl mx-auto" style={{ color: '#CBD5E1' }}>
-            Discover powerful features designed to transform how you work
+            Discover powerful features designed to enhance your learning experience
           </p>
         </motion.div>
       </div>
@@ -373,10 +373,10 @@ const Features: React.FC = () => {
           transition={{ duration: 0.8 }}
         >
           <h3 className="text-3xl sm:text-4xl font-bold mb-6" style={{ color: '#F1F5F9' }}>
-            Ready to get started?
+            Ready to start learning?
           </h3>
           <p className="text-lg mb-8" style={{ color: '#CBD5E1' }}>
-            Join thousands of teams already using SynapseAI
+            Join thousands of learners already using SynapseAI
           </p>
           <motion.a
             href="/register"
@@ -392,7 +392,7 @@ const Features: React.FC = () => {
               boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)',
             }}
           >
-            Start Free Trial
+            Get Started Free
           </motion.a>
         </motion.div>
       </div>

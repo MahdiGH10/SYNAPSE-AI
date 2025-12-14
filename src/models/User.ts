@@ -8,7 +8,7 @@ export interface IUser extends Document {
   verified: boolean;
   googleId?: string;
   image?: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'superadmin';
   lastLogin?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -57,7 +57,7 @@ const UserSchema = new mongoose.Schema<IUser>(
     },
     role: {
       type: String,
-      enum: ['user', 'admin'],
+      enum: ['user', 'admin', 'superadmin'],
       default: 'user',
     },
     lastLogin: {
