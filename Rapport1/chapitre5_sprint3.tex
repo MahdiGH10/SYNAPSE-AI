@@ -1,0 +1,922 @@
+
+\chapter{Sprint 3 : Communauté et Administration}
+\label{chap:sprint3}
+
+\section{Introduction}
+
+Le Sprint 3 finalise la plateforme SynapseAI en ajoutant deux dimensions essentielles : l'espace communautaire permettant aux utilisateurs de partager et d'interagir, et les outils d'administration nécessaires à la gestion de la plateforme. Ce sprint introduit également le générateur d'exercices personnalisés pour renforcer l'aspect éducatif.
+
+Ces fonctionnalités transforment SynapseAI en un écosystème complet d'apprentissage collaboratif et géré.
+
+\section{Backlog du Sprint 3}
+
+\subsection{User Stories Sélectionnées}
+
+\begin{table}[H]
+\centering
+\caption{Backlog du Sprint 3}
+\label{tab:backlog-sprint3}
+\begin{tabular}{|l|p{7cm}|c|c|}
+\hline
+\textbf{ID} & \textbf{User Story} & \textbf{Priority} & \textbf{Points} \\
+\hline
+US16 & Publier des posts dans la communauté & Basse & 5 \\
+\hline
+US17 & Commenter les posts des autres & Basse & 5 \\
+\hline
+US18 & Liker des posts et commentaires & Basse & 3 \\
+\hline
+US19 & Générer des exercices personnalisés & Basse & 8 \\
+\hline
+US20 & Soumettre réponses pour correction & Basse & 5 \\
+\hline
+US21 & Gérer les utilisateurs (admin) & Basse & 8 \\
+\hline
+US22 & Modérer le contenu (admin) & Basse & 5 \\
+\hline
+US23 & Consulter statistiques (admin) & Basse & 8 \\
+\hline
+\multicolumn{3}{|r|}{\textbf{Total}} & \textbf{47} \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Critères d'Acceptation}
+
+\subsubsection{US16-18 : Espace Communautaire}
+
+\begin{itemize}
+    \item Page dédiée à la communauté
+    \item Interface de création de posts (titre, contenu, tags)
+    \item Affichage du feed de posts
+    \item Système de commentaires avec réponses
+    \item Boutons like/unlike pour posts et commentaires
+    \item Compteurs de likes et commentaires
+    \item Profil utilisateur avec posts publiés
+    \item Filtrage et recherche de posts
+\end{itemize}
+
+\subsubsection{US19-20 : Générateur d'Exercices}
+
+\begin{itemize}
+    \item Interface de configuration d'exercices (sujet, niveau, nombre)
+    \item Génération automatique via LLM
+    \item Types d'exercices : QCM, questions ouvertes, problèmes
+    \item Formulaire de soumission de réponses
+    \item Correction automatique par le LLM
+    \item Affichage des résultats avec feedback détaillé
+    \item Historique des exercices réalisés
+\end{itemize}
+
+\subsubsection{US21-23 : Tableau de Bord Administratif}
+
+\begin{itemize}
+    \item Authentification admin
+    \item Tableau de bord avec statistiques clés
+    \item Gestion des utilisateurs (liste, recherche, désactivation)
+    \item Modération des posts (validation, suppression)
+    \item Système de tickets/support
+    \item Graphiques de statistiques d'utilisation
+    \item Journaux d'activité (logs)
+\end{itemize}
+
+\section{Raffinement des Cas d'Utilisation}
+
+\subsection{Cas d'Utilisation : Publier un Post}
+
+% Placeholder pour UC post
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.85\textwidth}{\centering [PLACEHOLDER - Diagramme de cas d'utilisation : Publier Post]\\
+    Acteur Utilisateur\\
+    Include : Rédiger contenu, Ajouter tags, Prévisualiser, Publier\\
+    Extend : Ajouter images}}
+    \caption{Diagramme de cas d'utilisation : Publier un post}
+    \label{fig:uc-post}
+\end{figure}
+
+\subsection{Cas d'Utilisation : Générer Exercices}
+
+% Placeholder pour UC exercices
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.85\textwidth}{\centering [PLACEHOLDER - Diagramme de cas d'utilisation : Générer Exercices]\\
+    Acteurs Utilisateur et Système LLM\\
+    Include : Configurer paramètres, Générer via LLM, Afficher exercices, Soumettre réponses, Corriger}}
+    \caption{Diagramme de cas d'utilisation : Générer et réaliser des exercices}
+    \label{fig:uc-exercices}
+\end{figure}
+
+\subsection{Cas d'Utilisation : Administrer Plateforme}
+
+% Placeholder pour UC admin
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.85\textwidth}{\centering [PLACEHOLDER - Diagramme de cas d'utilisation : Administrer]\\
+    Acteur Administrateur\\
+    Use cases : Gérer utilisateurs, Modérer contenu, Consulter statistiques, Gérer tickets}}
+    \caption{Diagramme de cas d'utilisation : Administration de la plateforme}
+    \label{fig:uc-admin}
+\end{figure}
+
+\section{Diagrammes UML}
+
+\subsection{Diagramme de Séquence : Publication de Post}
+
+% Placeholder pour séquence post
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Diagramme de séquence : Publier Post]\\
+    1. Utilisateur → Rédiger post\\
+    2. Frontend → Valider formulaire\\
+    3. POST /api/Post\\
+    4. Server → Créer Post dans MongoDB\\
+    5. Server → Notifier followers\\
+    6. Frontend → Afficher post publié}}
+    \caption{Diagramme de séquence : Publication d'un post}
+    \label{fig:seq-post}
+\end{figure}
+
+\subsection{Diagramme de Séquence : Génération d'Exercices}
+
+% Placeholder pour séquence exercices
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Diagramme de séquence : Générer Exercices]\\
+    1. Utilisateur → Configurer paramètres\\
+    2. POST /api/Exercice/generate\\
+    3. Server → LLM API (prompt exercices)\\
+    4. LLM → Retour exercices générés\\
+    5. Server → Save in MongoDB\\
+    6. Frontend → Afficher exercices\\
+    7. Utilisateur → Soumettre réponses\\
+    8. Server → LLM correction\\
+    9. Frontend → Afficher résultats}}
+    \caption{Diagramme de séquence : Génération et correction d'exercices}
+    \label{fig:seq-exercices}
+\end{figure}
+
+\subsection{Diagramme de Classes Sprint 3}
+
+% Placeholder pour classes
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Diagramme de classes Sprint 3]\\
+    Nouvelles classes :\\
+    - \textbf{Post} : \_id, userId, title, content, tags[], likes[], commentCount, createdAt\\
+    - \textbf{Comment} : \_id, postId, userId, content, likes[], createdAt\\
+    - \textbf{Like} : \_id, userId, targetId, targetType, createdAt\\
+    - \textbf{Exercise} : \_id, userId, subject, level, questions[], answers[], score, createdAt\\
+    Relations avec User}}
+    \caption{Diagramme de classes complet (Sprint 3)}
+    \label{fig:classes-sprint3}
+\end{figure}
+
+\section{Réalisation du Sprint 3}
+
+\subsection{Implémentation de l'Espace Communautaire}
+
+\subsubsection{Modèle Post}
+
+\begin{lstlisting}[language=JavaScript, caption=Schéma Mongoose Post, label=code:post-schema]
+// src/models/Post.ts
+import mongoose from 'mongoose';
+
+const PostSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  title: {
+    type: String,
+    required: [true, 'Title is required'],
+    maxlength: [200, 'Title cannot exceed 200 characters'],
+  },
+  content: {
+    type: String,
+    required: [true, 'Content is required'],
+  },
+  tags: [{
+    type: String,
+    lowercase: true,
+  }],
+  likes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+  commentCount: {
+    type: Number,
+    default: 0,
+  },
+  views: {
+    type: Number,
+    default: 0,
+  },
+}, {
+  timestamps: true,
+});
+
+// Index pour la recherche
+PostSchema.index({ title: 'text', content: 'text', tags: 'text' });
+
+export default mongoose.models.Post || 
+  mongoose.model('Post', PostSchema);
+\end{lstlisting}
+
+\subsubsection{Modèle Comment}
+
+\begin{lstlisting}[language=JavaScript, caption=Schéma Mongoose Comment, label=code:comment-schema]
+// src/models/comment.ts
+import mongoose from 'mongoose';
+
+const CommentSchema = new mongoose.Schema({
+  postId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Post',
+    required: true,
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  content: {
+    type: String,
+    required: [true, 'Content is required'],
+    maxlength: [1000, 'Comment cannot exceed 1000 characters'],
+  },
+  parentCommentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Comment',
+    default: null,
+  },
+  likes: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  }],
+}, {
+  timestamps: true,
+});
+
+export default mongoose.models.Comment || 
+  mongoose.model('Comment', CommentSchema);
+\end{lstlisting}
+
+\subsubsection{Modèle Like}
+
+\begin{lstlisting}[language=JavaScript, caption=Schéma Mongoose Like, label=code:like-schema]
+// src/models/Likes.ts
+import mongoose from 'mongoose';
+
+const LikeSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  targetId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+  },
+  targetType: {
+    type: String,
+    enum: ['post', 'comment'],
+    required: true,
+  },
+}, {
+  timestamps: true,
+});
+
+// Index unique pour éviter les doubles likes
+LikeSchema.index({ userId: 1, targetId: 1, targetType: 1 }, 
+  { unique: true });
+
+export default mongoose.models.Like || 
+  mongoose.model('Like', LikeSchema);
+\end{lstlisting}
+
+\subsubsection{API Posts}
+
+\begin{lstlisting}[language=JavaScript, caption=API Route pour les posts, label=code:api-posts]
+// src/app/api/Post/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import Post from '@/models/Post';
+import { connectDB } from '@/lib/db';
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    await connectDB();
+
+    const { title, content, tags } = await req.json();
+
+    if (!title || !content) {
+      return NextResponse.json(
+        { error: 'Title and content are required' },
+        { status: 400 }
+      );
+    }
+
+    const post = await Post.create({
+      userId: session.user.id,
+      title,
+      content,
+      tags: tags || [],
+    });
+
+    await post.populate('userId', 'name email image');
+
+    return NextResponse.json({
+      message: 'Post created successfully',
+      post,
+    }, { status: 201 });
+
+  } catch (error) {
+    console.error('Create post error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    await connectDB();
+
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const tag = searchParams.get('tag');
+    const search = searchParams.get('search');
+
+    let query: any = {};
+
+    if (tag) {
+      query.tags = tag;
+    }
+
+    if (search) {
+      query.$text = { $search: search };
+    }
+
+    const posts = await Post.find(query)
+      .populate('userId', 'name email image')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    const total = await Post.countDocuments(query);
+
+    return NextResponse.json({
+      posts,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
+
+  } catch (error) {
+    console.error('Get posts error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+\end{lstlisting}
+
+\subsection{Implémentation du Générateur d'Exercices}
+
+\subsubsection{Modèle Exercise}
+
+\begin{lstlisting}[language=JavaScript, caption=Schéma Mongoose Exercise, label=code:exercise-schema]
+// src/models/Exercice.ts
+import mongoose from 'mongoose';
+
+const QuestionSchema = new mongoose.Schema({
+  questionText: String,
+  type: {
+    type: String,
+    enum: ['mcq', 'open', 'problem'],
+  },
+  options: [String], // Pour MCQ
+  correctAnswer: String,
+  points: {
+    type: Number,
+    default: 1,
+  },
+});
+
+const AnswerSchema = new mongoose.Schema({
+  questionIndex: Number,
+  userAnswer: String,
+  isCorrect: Boolean,
+  feedback: String,
+  pointsEarned: Number,
+});
+
+const ExerciseSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  subject: {
+    type: String,
+    required: true,
+  },
+  level: {
+    type: String,
+    enum: ['beginner', 'intermediate', 'advanced'],
+    required: true,
+  },
+  questions: [QuestionSchema],
+  answers: [AnswerSchema],
+  score: {
+    type: Number,
+    default: 0,
+  },
+  maxScore: {
+    type: Number,
+    default: 0,
+  },
+  completed: {
+    type: Boolean,
+    default: false,
+  },
+}, {
+  timestamps: true,
+});
+
+export default mongoose.models.Exercise || 
+  mongoose.model('Exercise', ExerciseSchema);
+\end{lstlisting}
+
+\subsubsection{API Génération d'Exercices}
+
+\begin{lstlisting}[language=JavaScript, caption=API Route pour générer des exercices, label=code:api-exercises]
+// src/app/api/Exercice/generate/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import Exercise from '@/models/Exercice';
+import { connectDB } from '@/lib/db';
+import { callLLM } from '@/lib/llm';
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    await connectDB();
+
+    const { subject, level, count } = await req.json();
+
+    if (!subject || !level) {
+      return NextResponse.json(
+        { error: 'Subject and level are required' },
+        { status: 400 }
+      );
+    }
+
+    const numberOfQuestions = count || 5;
+
+    const prompt = `
+Génère ${numberOfQuestions} questions d'exercice sur le sujet "${subject}" 
+de niveau ${level}.
+
+Pour chaque question, fournis :
+1. Le texte de la question
+2. Le type (mcq pour QCM, open pour question ouverte, problem pour problème)
+3. Pour les MCQ : 4 options (A, B, C, D)
+4. La réponse correcte
+5. Le nombre de points (1-5 selon difficulté)
+
+Format JSON :
+{
+  "questions": [
+    {
+      "questionText": "...",
+      "type": "mcq",
+      "options": ["A) ...", "B) ...", "C) ...", "D) ..."],
+      "correctAnswer": "A",
+      "points": 2
+    }
+  ]
+}
+    `;
+
+    const response = await callLLM('gpt-4', [
+      { role: 'user', content: prompt }
+    ]);
+
+    // Parser la réponse JSON
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('Failed to parse LLM response');
+    }
+
+    const exerciseData = JSON.parse(jsonMatch[0]);
+
+    const totalPoints = exerciseData.questions.reduce(
+      (sum: number, q: any) => sum + (q.points || 1),
+      0
+    );
+
+    const exercise = await Exercise.create({
+      userId: session.user.id,
+      subject,
+      level,
+      questions: exerciseData.questions,
+      maxScore: totalPoints,
+    });
+
+    // Retourner sans les réponses correctes
+    const questionsWithoutAnswers = exercise.questions.map(q => ({
+      questionText: q.questionText,
+      type: q.type,
+      options: q.options,
+      points: q.points,
+    }));
+
+    return NextResponse.json({
+      exerciseId: exercise._id,
+      subject: exercise.subject,
+      level: exercise.level,
+      questions: questionsWithoutAnswers,
+      maxScore: exercise.maxScore,
+    });
+
+  } catch (error) {
+    console.error('Generate exercise error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+\end{lstlisting}
+
+\subsubsection{API Correction d'Exercices}
+
+\begin{lstlisting}[language=JavaScript, caption=API Route pour corriger les exercices, label=code:api-correct]
+// src/app/api/Exercice/submit/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import Exercise from '@/models/Exercice';
+import { connectDB } from '@/lib/db';
+import { callLLM } from '@/lib/llm';
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    await connectDB();
+
+    const { exerciseId, answers } = await req.json();
+
+    const exercise = await Exercise.findById(exerciseId);
+
+    if (!exercise) {
+      return NextResponse.json(
+        { error: 'Exercise not found' },
+        { status: 404 }
+      );
+    }
+
+    if (exercise.userId.toString() !== session.user.id) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      );
+    }
+
+    let totalScore = 0;
+    const correctedAnswers = [];
+
+    for (let i = 0; i < exercise.questions.length; i++) {
+      const question = exercise.questions[i];
+      const userAnswer = answers[i];
+
+      if (question.type === 'mcq') {
+        // Correction automatique pour MCQ
+        const isCorrect = 
+          userAnswer === question.correctAnswer;
+        const pointsEarned = isCorrect ? question.points : 0;
+        totalScore += pointsEarned;
+
+        correctedAnswers.push({
+          questionIndex: i,
+          userAnswer,
+          isCorrect,
+          feedback: isCorrect 
+            ? 'Correct !' 
+            : `Incorrect. La bonne réponse est ${question.correctAnswer}`,
+          pointsEarned,
+        });
+
+      } else {
+        // Correction via LLM pour questions ouvertes
+        const correctionPrompt = `
+Question : ${question.questionText}
+Réponse attendue : ${question.correctAnswer}
+Réponse de l'étudiant : ${userAnswer}
+
+Évalue la réponse de l'étudiant (0 à ${question.points} points).
+Fournis un feedback constructif.
+
+Format JSON :
+{
+  "points": 2,
+  "feedback": "..."
+}
+        `;
+
+        const correctionResponse = await callLLM('gpt-4', [
+          { role: 'user', content: correctionPrompt }
+        ]);
+
+        const jsonMatch = correctionResponse.match(/\{[\s\S]*\}/);
+        const correction = jsonMatch 
+          ? JSON.parse(jsonMatch[0]) 
+          : { points: 0, feedback: 'Erreur de correction' };
+
+        totalScore += correction.points;
+
+        correctedAnswers.push({
+          questionIndex: i,
+          userAnswer,
+          isCorrect: correction.points === question.points,
+          feedback: correction.feedback,
+          pointsEarned: correction.points,
+        });
+      }
+    }
+
+    exercise.answers = correctedAnswers;
+    exercise.score = totalScore;
+    exercise.completed = true;
+    await exercise.save();
+
+    return NextResponse.json({
+      score: totalScore,
+      maxScore: exercise.maxScore,
+      percentage: Math.round(
+        (totalScore / exercise.maxScore) * 100
+      ),
+      answers: correctedAnswers,
+    });
+
+  } catch (error) {
+    console.error('Submit exercise error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+\end{lstlisting}
+
+\subsection{Implémentation du Tableau de Bord Admin}
+
+\subsubsection{API Dashboard Statistiques}
+
+\begin{lstlisting}[language=JavaScript, caption=API Route pour statistiques admin, label=code:api-dashboard]
+// src/app/api/dashboard/stats/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import User from '@/models/User';
+import Chat from '@/models/Chat';
+import Post from '@/models/Post';
+import Exercise from '@/models/Exercise';
+import { connectDB } from '@/lib/db';
+
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getServerSession();
+    
+    // Vérifier si l'utilisateur est admin
+    if (!session || !session.user.isAdmin) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    await connectDB();
+
+    // Statistiques globales
+    const totalUsers = await User.countDocuments();
+    const totalChats = await Chat.countDocuments();
+    const totalPosts = await Post.countDocuments();
+    const totalExercises = await Exercise.countDocuments();
+
+    // Utilisateurs actifs (dernière semaine)
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+    const activeUsers = await Chat.distinct('userId', {
+      updatedAt: { $gte: oneWeekAgo }
+    });
+
+    // Posts par mois (derniers 6 mois)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const postsPerMonth = await Post.aggregate([
+      { $match: { createdAt: { $gte: sixMonthsAgo } } },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+
+    // Top utilisateurs par nombre de posts
+    const topPosters = await Post.aggregate([
+      {
+        $group: {
+          _id: '$userId',
+          postCount: { $sum: 1 }
+        }
+      },
+      { $sort: { postCount: -1 } },
+      { $limit: 10 },
+      {
+        $lookup: {
+          from: 'users',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'user'
+        }
+      },
+      { $unwind: '$user' }
+    ]);
+
+    return NextResponse.json({
+      overview: {
+        totalUsers,
+        totalChats,
+        totalPosts,
+        totalExercises,
+        activeUsers: activeUsers.length,
+      },
+      charts: {
+        postsPerMonth,
+        topPosters,
+      },
+    });
+
+  } catch (error) {
+    console.error('Dashboard stats error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+\end{lstlisting}
+
+\subsection{Interfaces Utilisateur Sprint 3}
+
+\subsubsection{Feed Communautaire}
+
+% Placeholder pour capture community feed
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Capture d'écran : Feed Communautaire]\\
+    Montrer :\\
+    - Liste de posts avec titres, extraits, auteurs\\
+    - Compteurs de likes et commentaires\\
+    - Tags pour filtrer\\
+    - Bouton "New Post"\\
+    - Barre de recherche}}
+    \caption{Interface du feed communautaire}
+    \label{fig:ui-community-feed}
+\end{figure}
+
+\subsubsection{Détail d'un Post}
+
+% Placeholder pour capture post detail
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.9\textwidth}{\centering [PLACEHOLDER - Capture d'écran : Détail Post]\\
+    Montrer :\\
+    - Contenu complet du post\\
+    - Informations auteur avec avatar\\
+    - Bouton like\\
+    - Section commentaires\\
+    - Formulaire ajout commentaire}}
+    \caption{Page de détail d'un post avec commentaires}
+    \label{fig:ui-post-detail}
+\end{figure}
+
+\subsubsection{Interface Générateur d'Exercices}
+
+% Placeholder pour capture exercises
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Capture d'écran : Générateur Exercices]\\
+    Montrer :\\
+    - Formulaire configuration (sujet, niveau, nombre)\\
+    - Questions générées\\
+    - Formulaire de réponses\\
+    - Page résultats avec score et feedback}}
+    \caption{Interface de génération et réalisation d'exercices}
+    \label{fig:ui-exercises}
+\end{figure}
+
+\subsubsection{Tableau de Bord Administratif}
+
+% Placeholder pour capture admin dashboard
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Capture d'écran : Dashboard Admin]\\
+    Montrer :\\
+    - Cartes avec statistiques clés\\
+    - Graphiques d'activité\\
+    - Liste utilisateurs avec actions\\
+    - Section modération posts\\
+    - Système de tickets}}
+    \caption{Tableau de bord administratif}
+    \label{fig:ui-admin-dashboard}
+\end{figure}
+
+\subsection{Tests et Validation Sprint 3}
+
+\begin{table}[H]
+\centering
+\caption{Résultats des tests fonctionnels Sprint 3}
+\label{tab:tests-sprint3}
+\begin{tabular}{|l|p{6cm}|c|}
+\hline
+\textbf{Test} & \textbf{Description} & \textbf{Résultat} \\
+\hline
+T28 & Création d'un post & ✓ Pass \\
+\hline
+T29 & Affichage du feed communautaire & ✓ Pass \\
+\hline
+T30 & Ajout de commentaire & ✓ Pass \\
+\hline
+T31 & Like/Unlike post & ✓ Pass \\
+\hline
+T32 & Like/Unlike commentaire & ✓ Pass \\
+\hline
+T33 & Recherche de posts & ✓ Pass \\
+\hline
+T34 & Filtrage par tags & ✓ Pass \\
+\hline
+T35 & Génération d'exercices & ✓ Pass \\
+\hline
+T36 & Soumission de réponses & ✓ Pass \\
+\hline
+T37 & Correction automatique & ✓ Pass \\
+\hline
+T38 & Affichage résultats avec feedback & ✓ Pass \\
+\hline
+T39 & Accès tableau de bord admin & ✓ Pass \\
+\hline
+T40 & Consultation statistiques & ✓ Pass \\
+\hline
+T41 & Gestion utilisateurs & ✓ Pass \\
+\hline
+T42 & Modération contenu & ✓ Pass \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+
+Le Sprint 3 finalise la plateforme SynapseAI en ajoutant une dimension sociale et collaborative essentielle. L'espace communautaire permet aux utilisateurs de partager leurs connaissances et d'interagir, créant ainsi un véritable écosystème d'apprentissage. Le générateur d'exercices renforce l'aspect éducatif avec des évaluations personnalisées et une correction automatique intelligente. Enfin, le tableau de bord administratif fournit les outils nécessaires pour gérer efficacement la plateforme.
+
+Tous les tests fonctionnels du Sprint 3 sont concluants. La plateforme SynapseAI est maintenant complète avec l'ensemble des fonctionnalités planifiées : authentification, chat multi-LLM, analyse de documents, génération de graphiques, recommandations YouTube, espace communautaire, générateur d'exercices et administration.
+
+Le chapitre suivant présente la conclusion générale du projet et les perspectives d'évolution futures.
+

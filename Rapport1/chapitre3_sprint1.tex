@@ -1,0 +1,824 @@
+
+\chapter{Sprint 1 : Infrastructure et Chat Multi-LLM}
+\label{chap:sprint1}
+
+\section{Introduction}
+
+Le Sprint 1 constitue la fondation de la plateforme SynapseAI. L'objectif de ce sprint est de mettre en place l'infrastructure technique de base, d'implémenter le système d'authentification et de développer l'interface de chat permettant d'interagir avec les trois modèles de langage (GPT-4, Claude, Gemini).
+
+Ce chapitre présente le backlog du Sprint 1, le raffinement des cas d'utilisation, la modélisation UML détaillée et la réalisation technique avec captures d'écran des interfaces développées.
+
+\section{Backlog du Sprint 1}
+
+\subsection{User Stories Sélectionnées}
+
+Le Product Owner a priorisé les User Stories suivantes pour le Sprint 1 :
+
+\begin{table}[H]
+\centering
+\caption{Backlog du Sprint 1}
+\label{tab:backlog-sprint1}
+\begin{tabular}{|l|p{7cm}|c|c|}
+\hline
+\textbf{ID} & \textbf{User Story} & \textbf{Priority} & \textbf{Points} \\
+\hline
+US01 & Créer un compte utilisateur & Haute & 5 \\
+\hline
+US02 & Se connecter via email/password & Haute & 3 \\
+\hline
+US03 & Se connecter via Google OAuth & Haute & 5 \\
+\hline
+US04 & Chatter avec GPT-4 & Haute & 8 \\
+\hline
+US05 & Chatter avec Claude & Haute & 8 \\
+\hline
+US06 & Chatter avec Gemini & Haute & 8 \\
+\hline
+US07 & Consulter l'historique des conversations & Haute & 5 \\
+\hline
+US08 & Créer plusieurs sessions de chat & Haute & 5 \\
+\hline
+\multicolumn{3}{|r|}{\textbf{Total}} & \textbf{47} \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Critères d'Acceptation}
+
+Pour chaque User Story, des critères d'acceptation ont été définis :
+
+\subsubsection{US01 : Créer un compte}
+
+\begin{itemize}
+    \item Formulaire d'inscription avec champs : nom, prénom, email, mot de passe
+    \item Validation côté client et serveur
+    \item Mot de passe haché avec bcrypt
+    \item Email de vérification envoyé après inscription
+    \item Redirection vers page de vérification
+\end{itemize}
+
+\subsubsection{US02-03 : Authentification}
+
+\begin{itemize}
+    \item Formulaire de connexion fonctionnel
+    \item Génération de token JWT après authentification réussie
+    \item Bouton "Sign in with Google" opérationnel
+    \item Gestion des erreurs (identifiants incorrects, compte non vérifié)
+    \item Redirection vers dashboard après connexion
+\end{itemize}
+
+\subsubsection{US04-06 : Chat Multi-LLM}
+
+\begin{itemize}
+    \item Interface de chat responsive
+    \item Sélection du modèle (GPT-4, Claude, Gemini)
+    \item Envoi de messages et réception de réponses
+    \item Affichage en temps réel avec loading state
+    \item Formatage Markdown des réponses
+    \item Gestion des erreurs API
+\end{itemize}
+
+\subsubsection{US07-08 : Historique}
+
+\begin{itemize}
+    \item Sidebar listant toutes les conversations
+    \item Création de nouvelles conversations
+    \item Basculement entre conversations
+    \item Suppression de conversations
+    \item Persistance en base de données
+\end{itemize}
+
+\section{Raffinement des Cas d'Utilisation}
+
+\subsection{Cas d'Utilisation : S'inscrire}
+
+% Placeholder pour diagramme de cas d'utilisation inscription
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.8\textwidth}{\centering [PLACEHOLDER - Diagramme de cas d'utilisation : S'inscrire]\\
+    Montrer acteur Utilisateur avec cas d'utilisation "S'inscrire", include "Valider formulaire", extend "Vérifier email"}}
+    \caption{Diagramme de cas d'utilisation détaillé : S'inscrire}
+    \label{fig:uc-inscription}
+\end{figure}
+
+\subsection{Cas d'Utilisation : Se connecter}
+
+% Placeholder pour diagramme de cas d'utilisation connexion
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.8\textwidth}{\centering [PLACEHOLDER - Diagramme de cas d'utilisation : Se connecter]\\
+    Montrer acteur Utilisateur avec cas d'utilisation "Se connecter", branches "Connexion classique" et "Connexion Google OAuth"}}
+    \caption{Diagramme de cas d'utilisation détaillé : Se connecter}
+    \label{fig:uc-connexion}
+\end{figure}
+
+\subsection{Cas d'Utilisation : Chatter avec LLM}
+
+% Placeholder pour diagramme de cas d'utilisation chat
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.8\textwidth}{\centering [PLACEHOLDER - Diagramme de cas d'utilisation : Chatter avec LLM]\\
+    Montrer acteurs Utilisateur et Système LLM, cas d'utilisation "Chatter", include "Sélectionner modèle", "Envoyer message", "Sauvegarder conversation"}}
+    \caption{Diagramme de cas d'utilisation détaillé : Chatter avec LLM}
+    \label{fig:uc-chat}
+\end{figure}
+
+\section{Diagrammes de Séquence}
+
+\subsection{Séquence : Inscription}
+
+% Placeholder pour diagramme de séquence inscription
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Diagramme de séquence : Inscription]\\
+    Interactions : Utilisateur → Frontend → API Register → Database\\
+    1. Saisir formulaire\\
+    2. POST /api/auth/register\\
+    3. Valider données\\
+    4. Hasher password (bcrypt)\\
+    5. Créer User dans MongoDB\\
+    6. Envoyer email de vérification\\
+    7. Retourner token JWT\\
+    8. Redirection vers dashboard}}
+    \caption{Diagramme de séquence : Processus d'inscription}
+    \label{fig:seq-inscription}
+\end{figure}
+
+\subsection{Séquence : Connexion OAuth Google}
+
+% Placeholder pour diagramme de séquence OAuth
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Diagramme de séquence : OAuth Google]\\
+    Interactions : Utilisateur → Frontend → NextAuth → Google OAuth → Database\\
+    1. Clic "Sign in with Google"\\
+    2. Redirection vers Google\\
+    3. Authentification Google\\
+    4. Callback avec token\\
+    5. Vérifier/Créer utilisateur\\
+    6. Générer session\\
+    7. Redirection vers dashboard}}
+    \caption{Diagramme de séquence : Connexion via Google OAuth}
+    \label{fig:seq-oauth}
+\end{figure}
+
+\subsection{Séquence : Envoi de message au LLM}
+
+% Placeholder pour diagramme de séquence chat
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Diagramme de séquence : Chat LLM]\\
+    Interactions : Utilisateur → Frontend → API Chat → LLM API → Database\\
+    1. Sélectionner modèle (GPT-4/Claude/Gemini)\\
+    2. Saisir message\\
+    3. POST /api/chat\\
+    4. Récupérer historique conversation\\
+    5. Appeler LLM API (OpenAI/Anthropic/Google)\\
+    6. Recevoir réponse\\
+    7. Sauvegarder message + réponse\\
+    8. Retourner réponse au frontend\\
+    9. Afficher réponse formatée}}
+    \caption{Diagramme de séquence : Envoi de message au LLM}
+    \label{fig:seq-chat}
+\end{figure}
+
+\section{Diagramme de Classes}
+
+Le diagramme de classes présente la structure des données du Sprint 1 :
+
+% Placeholder pour diagramme de classes
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Diagramme de classes Sprint 1]\\
+    Classes principales :\\
+    - \textbf{User} : \_id, name, email, password, emailVerified, image, createdAt\\
+    - \textbf{Chat} : \_id, userId, title, model, messages[], createdAt, updatedAt\\
+    - \textbf{Message} : role, content, timestamp\\
+    Relations :\\
+    - User (1) --- (*) Chat : possède\\
+    - Chat (1) --- (*) Message : contient}}
+    \caption{Diagramme de classes du Sprint 1}
+    \label{fig:classes-sprint1}
+\end{figure}
+
+\subsection{Description des Classes}
+
+\subsubsection{Classe User}
+
+\begin{table}[H]
+\centering
+\caption{Attributs de la classe User}
+\label{tab:class-user}
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Attribut} & \textbf{Type} & \textbf{Description} \\
+\hline
+\_id & ObjectId & Identifiant unique MongoDB \\
+\hline
+name & String & Nom complet de l'utilisateur \\
+\hline
+email & String & Adresse email (unique) \\
+\hline
+password & String & Mot de passe haché (bcrypt) \\
+\hline
+emailVerified & Boolean & Statut de vérification email \\
+\hline
+image & String & URL de l'avatar (OAuth) \\
+\hline
+createdAt & Date & Date de création du compte \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Classe Chat}
+
+\begin{table}[H]
+\centering
+\caption{Attributs de la classe Chat}
+\label{tab:class-chat}
+\begin{tabular}{|l|l|p{6cm}|}
+\hline
+\textbf{Attribut} & \textbf{Type} & \textbf{Description} \\
+\hline
+\_id & ObjectId & Identifiant unique de la conversation \\
+\hline
+userId & ObjectId & Référence vers User \\
+\hline
+title & String & Titre de la conversation \\
+\hline
+model & String & Modèle utilisé (gpt-4, claude, gemini) \\
+\hline
+messages & Array & Tableau de messages \\
+\hline
+createdAt & Date & Date de création \\
+\hline
+updatedAt & Date & Date de dernière mise à jour \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Réalisation du Sprint 1}
+
+\subsection{Architecture Technique}
+
+L'architecture du Sprint 1 suit le pattern MVC adapté à Next.js :
+
+\begin{itemize}
+    \item \textbf{Models} : Schémas Mongoose (User, Chat)
+    \item \textbf{Views} : Composants React/Next.js
+    \item \textbf{Controllers} : API Routes Next.js
+\end{itemize}
+
+% Placeholder pour architecture Sprint 1
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.85\textwidth}{\centering [PLACEHOLDER - Architecture technique Sprint 1]\\
+    Diagramme montrant :\\
+    Frontend (React Components) ↔ API Routes ↔ MongoDB\\
+    API Routes ↔ External APIs (OpenAI, Anthropic, Google)}}
+    \caption{Architecture technique du Sprint 1}
+    \label{fig:archi-sprint1}
+\end{figure}
+
+\subsection{Implémentation de l'Authentification}
+
+\subsubsection{Modèle User (Mongoose)}
+
+\begin{lstlisting}[language=JavaScript, caption=Schéma Mongoose User, label=code:user-schema]
+// src/models/User.ts
+import mongoose from 'mongoose';
+
+const UserSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'Name is required'],
+  },
+  email: {
+    type: String,
+    required: [true, 'Email is required'],
+    unique: true,
+    lowercase: true,
+  },
+  password: {
+    type: String,
+    required: function() {
+      return !this.image; // Required si pas OAuth
+    },
+  },
+  emailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  image: {
+    type: String, // Pour OAuth Google
+  },
+}, {
+  timestamps: true,
+});
+
+export default mongoose.models.User || 
+  mongoose.model('User', UserSchema);
+\end{lstlisting}
+
+\subsubsection{API Register}
+
+\begin{lstlisting}[language=JavaScript, caption=API Route d'inscription, label=code:api-register]
+// src/app/api/auth/register/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcrypt';
+import User from '@/models/User';
+import { connectDB } from '@/lib/db';
+import { sendVerificationEmail } from '@/lib/email';
+
+export async function POST(req: NextRequest) {
+  try {
+    await connectDB();
+    
+    const { name, email, password } = await req.json();
+    
+    // Validation
+    if (!name || !email || !password) {
+      return NextResponse.json(
+        { error: 'All fields are required' },
+        { status: 400 }
+      );
+    }
+    
+    // Vérifier si email existe déjà
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return NextResponse.json(
+        { error: 'Email already registered' },
+        { status: 409 }
+      );
+    }
+    
+    // Hasher le mot de passe
+    const hashedPassword = await bcrypt.hash(password, 12);
+    
+    // Créer l'utilisateur
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      emailVerified: false,
+    });
+    
+    // Envoyer email de vérification
+    await sendVerificationEmail(email, user._id);
+    
+    return NextResponse.json({
+      message: 'User created successfully',
+      userId: user._id,
+    }, { status: 201 });
+    
+  } catch (error) {
+    console.error('Register error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+\end{lstlisting}
+
+\subsubsection{Configuration NextAuth}
+
+\begin{lstlisting}[language=JavaScript, caption=Configuration NextAuth pour OAuth Google, label=code:nextauth]
+// src/app/api/auth/[...nextauth]/route.ts
+import NextAuth from 'next-auth';
+import GoogleProvider from 'next-auth/providers/google';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import bcrypt from 'bcrypt';
+import User from '@/models/User';
+import { connectDB } from '@/lib/db';
+
+export const authOptions = {
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    CredentialsProvider({
+      name: 'Credentials',
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        await connectDB();
+        
+        const user = await User.findOne({ 
+          email: credentials?.email 
+        });
+        
+        if (!user) {
+          throw new Error('No user found');
+        }
+        
+        const isValid = await bcrypt.compare(
+          credentials!.password,
+          user.password
+        );
+        
+        if (!isValid) {
+          throw new Error('Invalid password');
+        }
+        
+        if (!user.emailVerified) {
+          throw new Error('Email not verified');
+        }
+        
+        return {
+          id: user._id.toString(),
+          name: user.name,
+          email: user.email,
+        };
+      },
+    }),
+  ],
+  callbacks: {
+    async signIn({ user, account }) {
+      if (account?.provider === 'google') {
+        await connectDB();
+        
+        const existingUser = await User.findOne({ 
+          email: user.email 
+        });
+        
+        if (!existingUser) {
+          await User.create({
+            name: user.name,
+            email: user.email,
+            image: user.image,
+            emailVerified: true,
+          });
+        }
+      }
+      return true;
+    },
+  },
+  pages: {
+    signIn: '/login',
+  },
+};
+
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };
+\end{lstlisting}
+
+\subsection{Implémentation du Chat Multi-LLM}
+
+\subsubsection{Modèle Chat}
+
+\begin{lstlisting}[language=JavaScript, caption=Schéma Mongoose Chat, label=code:chat-schema]
+// src/models/Chat.ts
+import mongoose from 'mongoose';
+
+const MessageSchema = new mongoose.Schema({
+  role: {
+    type: String,
+    enum: ['user', 'assistant'],
+    required: true,
+  },
+  content: {
+    type: String,
+    required: true,
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+const ChatSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  title: {
+    type: String,
+    default: 'New Conversation',
+  },
+  model: {
+    type: String,
+    enum: ['gpt-4', 'claude-3', 'gemini-pro'],
+    required: true,
+  },
+  messages: [MessageSchema],
+}, {
+  timestamps: true,
+});
+
+export default mongoose.models.Chat || 
+  mongoose.model('Chat', ChatSchema);
+\end{lstlisting}
+
+\subsubsection{Service LLM Unifié}
+
+\begin{lstlisting}[language=JavaScript, caption=Service d'intégration LLM, label=code:llm-service]
+// src/lib/llm.ts
+import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Configuration des clients
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
+
+const genAI = new GoogleGenerativeAI(
+  process.env.GOOGLE_API_KEY!
+);
+
+export async function callLLM(
+  model: string,
+  messages: Array<{ role: string; content: string }>
+): Promise<string> {
+  
+  switch (model) {
+    case 'gpt-4':
+      return await callGPT4(messages);
+    
+    case 'claude-3':
+      return await callClaude(messages);
+    
+    case 'gemini-pro':
+      return await callGemini(messages);
+    
+    default:
+      throw new Error(`Unknown model: ${model}`);
+  }
+}
+
+async function callGPT4(messages: any[]): Promise<string> {
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: messages,
+    temperature: 0.7,
+    max_tokens: 2000,
+  });
+  
+  return response.choices[0].message.content || '';
+}
+
+async function callClaude(messages: any[]): Promise<string> {
+  // Convertir format pour Claude
+  const claudeMessages = messages.map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'assistant',
+    content: msg.content,
+  }));
+  
+  const response = await anthropic.messages.create({
+    model: 'claude-3-sonnet-20240229',
+    max_tokens: 2000,
+    messages: claudeMessages,
+  });
+  
+  return response.content[0].text;
+}
+
+async function callGemini(messages: any[]): Promise<string> {
+  const model = genAI.getGenerativeModel({ 
+    model: 'gemini-pro' 
+  });
+  
+  // Convertir l'historique pour Gemini
+  const history = messages.slice(0, -1).map(msg => ({
+    role: msg.role === 'user' ? 'user' : 'model',
+    parts: [{ text: msg.content }],
+  }));
+  
+  const chat = model.startChat({ history });
+  
+  const lastMessage = messages[messages.length - 1];
+  const result = await chat.sendMessage(lastMessage.content);
+  
+  return result.response.text();
+}
+\end{lstlisting}
+
+\subsubsection{API Chat}
+
+\begin{lstlisting}[language=JavaScript, caption=API Route pour le chat, label=code:api-chat]
+// src/app/api/chat/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import Chat from '@/models/Chat';
+import { connectDB } from '@/lib/db';
+import { callLLM } from '@/lib/llm';
+import { authOptions } from '../auth/[...nextauth]/route';
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
+    await connectDB();
+    
+    const { chatId, message, model } = await req.json();
+    
+    let chat;
+    
+    if (chatId) {
+      // Conversation existante
+      chat = await Chat.findById(chatId);
+      if (!chat) {
+        return NextResponse.json(
+          { error: 'Chat not found' },
+          { status: 404 }
+        );
+      }
+    } else {
+      // Nouvelle conversation
+      chat = await Chat.create({
+        userId: session.user.id,
+        model: model,
+        messages: [],
+      });
+    }
+    
+    // Ajouter le message de l'utilisateur
+    chat.messages.push({
+      role: 'user',
+      content: message,
+      timestamp: new Date(),
+    });
+    
+    // Appeler le LLM
+    const response = await callLLM(
+      chat.model,
+      chat.messages
+    );
+    
+    // Ajouter la réponse
+    chat.messages.push({
+      role: 'assistant',
+      content: response,
+      timestamp: new Date(),
+    });
+    
+    // Générer un titre si c'est le premier message
+    if (chat.messages.length === 2) {
+      chat.title = message.substring(0, 50) + '...';
+    }
+    
+    await chat.save();
+    
+    return NextResponse.json({
+      chatId: chat._id,
+      response: response,
+      title: chat.title,
+    });
+    
+  } catch (error) {
+    console.error('Chat error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+    
+    await connectDB();
+    
+    const chats = await Chat.find({ 
+      userId: session.user.id 
+    }).sort({ updatedAt: -1 });
+    
+    return NextResponse.json({ chats });
+    
+  } catch (error) {
+    console.error('Get chats error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+\end{lstlisting}
+
+\subsection{Interfaces Utilisateur}
+
+\subsubsection{Page d'Inscription}
+
+% Placeholder pour capture d'écran inscription
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.9\textwidth}{\centering [PLACEHOLDER - Capture d'écran : Page d'inscription]\\
+    Montrer formulaire avec champs Nom, Email, Password, bouton "Sign Up", lien vers login, bouton "Sign up with Google"}}
+    \caption{Interface de la page d'inscription}
+    \label{fig:ui-register}
+\end{figure}
+
+\subsubsection{Page de Connexion}
+
+% Placeholder pour capture d'écran connexion
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.9\textwidth}{\centering [PLACEHOLDER - Capture d'écran : Page de connexion]\\
+    Montrer formulaire avec champs Email, Password, bouton "Sign In", lien vers register, bouton "Sign in with Google"}}
+    \caption{Interface de la page de connexion}
+    \label{fig:ui-login}
+\end{figure}
+
+\subsubsection{Interface de Chat}
+
+% Placeholder pour capture d'écran chat
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Capture d'écran : Interface de chat]\\
+    Montrer interface avec :\\
+    - Sidebar gauche : liste des conversations\\
+    - Zone centrale : messages (user à droite, assistant à gauche)\\
+    - Barre du haut : sélection modèle (GPT-4/Claude/Gemini)\\
+    - Input en bas avec bouton send}}
+    \caption{Interface principale de chat avec sélection du modèle}
+    \label{fig:ui-chat}
+\end{figure}
+
+\subsubsection{Historique des Conversations}
+
+% Placeholder pour capture d'écran historique
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.8\textwidth}{\centering [PLACEHOLDER - Capture d'écran : Sidebar historique]\\
+    Montrer liste de conversations avec :\\
+    - Titres des conversations\\
+    - Timestamps\\
+    - Indicateur de modèle utilisé\\
+    - Bouton "New Chat"\\
+    - Boutons delete}}
+    \caption{Sidebar avec l'historique des conversations}
+    \label{fig:ui-history}
+\end{figure}
+
+\subsection{Tests et Validation}
+
+\subsubsection{Tests Fonctionnels}
+
+\begin{table}[H]
+\centering
+\caption{Résultats des tests fonctionnels Sprint 1}
+\label{tab:tests-sprint1}
+\begin{tabular}{|l|p{6cm}|c|}
+\hline
+\textbf{Test} & \textbf{Description} & \textbf{Résultat} \\
+\hline
+T01 & Inscription avec email/password valides & ✓ Pass \\
+\hline
+T02 & Inscription avec email déjà existant & ✓ Pass \\
+\hline
+T03 & Connexion avec identifiants corrects & ✓ Pass \\
+\hline
+T04 & Connexion avec identifiants incorrects & ✓ Pass \\
+\hline
+T05 & Connexion via Google OAuth & ✓ Pass \\
+\hline
+T06 & Envoi message à GPT-4 & ✓ Pass \\
+\hline
+T07 & Envoi message à Claude & ✓ Pass \\
+\hline
+T08 & Envoi message à Gemini & ✓ Pass \\
+\hline
+T09 & Création nouvelle conversation & ✓ Pass \\
+\hline
+T10 & Chargement historique conversations & ✓ Pass \\
+\hline
+T11 & Basculement entre conversations & ✓ Pass \\
+\hline
+T12 & Suppression conversation & ✓ Pass \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+
+Le Sprint 1 a permis de mettre en place avec succès les fondations de la plateforme SynapseAI. Le système d'authentification est opérationnel avec support de l'email/password et de Google OAuth. L'interface de chat multi-LLM fonctionne correctement avec les trois modèles (GPT-4, Claude, Gemini), et l'historique des conversations est persisté en base de données.
+
+Tous les critères d'acceptation des User Stories du Sprint 1 ont été satisfaits, et les tests fonctionnels sont concluants. La plateforme dispose maintenant d'une base solide pour l'ajout des fonctionnalités avancées qui seront implémentées dans le Sprint 2.
+
+Le chapitre suivant détaillera le Sprint 2, qui se concentre sur les fonctionnalités avancées : l'analyse de documents, la génération de graphiques et les recommandations YouTube.
+

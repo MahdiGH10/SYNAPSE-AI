@@ -1,0 +1,595 @@
+
+\chapter{État de l'Art et Spécification des Besoins}
+\label{chap:etatart}
+
+\section{Introduction}
+
+Ce chapitre présente l'état de l'art des technologies et concepts utilisés dans le développement de SynapseAI. Nous détaillons ensuite la spécification complète des besoins fonctionnels et non fonctionnels, puis nous proposons une modélisation UML du système. Enfin, nous décrivons l'environnement de travail et les technologies retenues.
+
+\section{État de l'Art}
+
+\subsection{Les Modèles de Langage de Grande Taille (LLM)}
+
+Les Large Language Models (LLM) sont des réseaux de neurones entraînés sur d'immenses corpus de texte pour comprendre et générer du langage naturel.
+
+\subsubsection{GPT-4 (OpenAI)}
+
+GPT-4 (Generative Pre-trained Transformer 4) est le modèle phare d'OpenAI :
+\begin{itemize}
+    \item Architecture transformer avec plusieurs milliards de paramètres
+    \item Capacités multimodales (texte et images)
+    \item Raisonnement avancé et créativité
+    \item API OpenAI pour l'intégration
+\end{itemize}
+
+\subsubsection{Claude (Anthropic)}
+
+Claude est développé par Anthropic avec un focus sur la sécurité :
+\begin{itemize}
+    \item Constitutional AI pour l'alignement éthique
+    \item Traitement de contextes très longs (100k tokens)
+    \item Réponses nuancées et précises
+    \item API Claude pour l'intégration
+\end{itemize}
+
+\subsubsection{Gemini (Google)}
+
+Gemini est le modèle multimodal de Google :
+\begin{itemize}
+    \item Architecture native multimodale
+    \item Intégration avec l'écosystème Google
+    \item Performances compétitives sur divers benchmarks
+    \item API Gemini pour l'intégration
+\end{itemize}
+
+% Placeholder pour comparaison LLM
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.85\textwidth}{\centering [PLACEHOLDER - Comparaison des capacités des LLM]\\Insérer un graphique radar comparant GPT-4, Claude et Gemini sur différents critères}}
+    \caption{Comparaison des capacités des trois modèles LLM intégrés}
+    \label{fig:comparaison-llm}
+\end{figure}
+
+\subsection{Technologies Web Modernes}
+
+\subsubsection{Next.js}
+
+Next.js est un framework React offrant :
+\begin{itemize}
+    \item Server-Side Rendering (SSR) et Static Site Generation (SSG)
+    \item API Routes intégrées
+    \item Optimisation automatique des performances
+    \item Routing basé sur le système de fichiers
+\end{itemize}
+
+\subsubsection{React}
+
+React est la bibliothèque JavaScript pour construire des interfaces utilisateur :
+\begin{itemize}
+    \item Composants réutilisables
+    \item Virtual DOM pour optimisation
+    \item Hooks pour la gestion d'état
+    \item Écosystème riche
+\end{itemize}
+
+\subsubsection{TypeScript}
+
+TypeScript ajoute le typage statique à JavaScript :
+\begin{itemize}
+    \item Détection d'erreurs à la compilation
+    \item IntelliSense amélioré
+    \item Code plus maintenable
+    \item Support POO avancé
+\end{itemize}
+
+\subsection{Base de Données et Backend}
+
+\subsubsection{MongoDB}
+
+MongoDB est une base de données NoSQL orientée documents :
+\begin{itemize}
+    \item Schéma flexible
+    \item Scalabilité horizontale
+    \item Requêtes puissantes
+    \item Mongoose pour ODM
+\end{itemize}
+
+\subsubsection{Node.js}
+
+Node.js permet l'exécution de JavaScript côté serveur :
+\begin{itemize}
+    \item Architecture non-bloquante
+    \item NPM pour la gestion des packages
+    \item Performance élevée
+    \item Écosystème mature
+\end{itemize}
+
+\subsection{Visualisation de Données}
+
+\subsubsection{Chart.js}
+
+Chart.js est une bibliothèque de graphiques JavaScript :
+\begin{itemize}
+    \item 8 types de graphiques différents
+    \item Personnalisation extensive
+    \item Animations fluides
+    \item Responsive design
+    \item Open source et léger
+\end{itemize}
+
+Types de graphiques supportés :
+\begin{itemize}
+    \item Line Charts (graphiques linéaires)
+    \item Bar Charts (graphiques à barres)
+    \item Pie Charts (graphiques circulaires)
+    \item Doughnut Charts (graphiques en anneau)
+    \item Radar Charts
+    \item Polar Area Charts
+\end{itemize}
+
+\subsection{APIs Externes}
+
+\subsubsection{YouTube Data API v3}
+
+L'API YouTube permet d'accéder aux données YouTube :
+\begin{itemize}
+    \item Recherche de vidéos
+    \item Récupération de métadonnées
+    \item Filtrage par pertinence
+    \item Quotas et authentification
+\end{itemize}
+
+\section{Spécification des Besoins}
+
+\subsection{Besoins Fonctionnels}
+
+Les besoins fonctionnels décrivent ce que le système doit faire.
+
+\subsubsection{Product Backlog}
+
+Le Product Backlog complet est organisé par priorité :
+
+\begin{table}[H]
+\centering
+\caption{Product Backlog - Priorité Haute}
+\label{tab:backlog-haute}
+\begin{tabular}{|l|p{8cm}|c|}
+\hline
+\textbf{ID} & \textbf{User Story} & \textbf{Priorité} \\
+\hline
+US01 & En tant qu'utilisateur, je veux créer un compte pour accéder à la plateforme & Haute \\
+\hline
+US02 & En tant qu'utilisateur, je veux me connecter via email/mot de passe & Haute \\
+\hline
+US03 & En tant qu'utilisateur, je veux me connecter via Google OAuth & Haute \\
+\hline
+US04 & En tant qu'utilisateur, je veux chatter avec GPT-4 & Haute \\
+\hline
+US05 & En tant qu'utilisateur, je veux chatter avec Claude & Haute \\
+\hline
+US06 & En tant qu'utilisateur, je veux chatter avec Gemini & Haute \\
+\hline
+US07 & En tant qu'utilisateur, je veux voir l'historique de mes conversations & Haute \\
+\hline
+US08 & En tant qu'utilisateur, je veux créer plusieurs sessions de chat & Haute \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Product Backlog - Priorité Moyenne}
+\label{tab:backlog-moyenne}
+\begin{tabular}{|l|p{8cm}|c|}
+\hline
+\textbf{ID} & \textbf{User Story} & \textbf{Priorité} \\
+\hline
+US09 & En tant qu'utilisateur, je veux uploader un document pour l'analyser & Moyenne \\
+\hline
+US10 & En tant qu'utilisateur, je veux obtenir un résumé de mon document & Moyenne \\
+\hline
+US11 & En tant qu'utilisateur, je veux extraire les concepts clés d'un document & Moyenne \\
+\hline
+US12 & En tant qu'utilisateur, je veux générer des graphiques automatiquement & Moyenne \\
+\hline
+US13 & En tant qu'utilisateur, je veux personnaliser mes graphiques & Moyenne \\
+\hline
+US14 & En tant qu'utilisateur, je veux obtenir des recommandations YouTube pertinentes & Moyenne \\
+\hline
+US15 & En tant qu'utilisateur, je veux voir les vidéos recommandées dans l'interface & Moyenne \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Product Backlog - Priorité Basse}
+\label{tab:backlog-basse}
+\begin{tabular}{|l|p{8cm}|c|}
+\hline
+\textbf{ID} & \textbf{User Story} & \textbf{Priorité} \\
+\hline
+US16 & En tant qu'utilisateur, je veux publier des posts dans la communauté & Basse \\
+\hline
+US17 & En tant qu'utilisateur, je veux commenter les posts des autres & Basse \\
+\hline
+US18 & En tant qu'utilisateur, je veux liker des posts et commentaires & Basse \\
+\hline
+US19 & En tant qu'utilisateur, je veux générer des exercices personnalisés & Basse \\
+\hline
+US20 & En tant qu'utilisateur, je veux soumettre mes réponses pour correction & Basse \\
+\hline
+US21 & En tant qu'admin, je veux gérer les utilisateurs & Basse \\
+\hline
+US22 & En tant qu'admin, je veux modérer le contenu communautaire & Basse \\
+\hline
+US23 & En tant qu'admin, je veux consulter les statistiques de la plateforme & Basse \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Besoins Non Fonctionnels}
+
+Les besoins non fonctionnels définissent les critères de qualité du système.
+
+\subsubsection{Performance}
+
+\begin{itemize}
+    \item Temps de réponse des API LLM : < 5 secondes
+    \item Temps de chargement des pages : < 2 secondes
+    \item Traitement de documents : < 10 secondes pour 10 pages
+    \item Génération de graphiques : < 1 seconde
+\end{itemize}
+
+\subsubsection{Sécurité}
+
+\begin{itemize}
+    \item Authentification JWT avec expiration de tokens
+    \item Hachage des mots de passe (bcrypt)
+    \item OAuth 2.0 pour Google Sign-In
+    \item Protection CSRF
+    \item Validation des entrées utilisateur
+    \item HTTPS obligatoire en production
+\end{itemize}
+
+\subsubsection{Scalabilité}
+
+\begin{itemize}
+    \item Support de 1000 utilisateurs concurrents
+    \item Architecture modulaire et extensible
+    \item Possibilité d'ajouter de nouveaux modèles LLM
+    \item Base de données distribuable
+\end{itemize}
+
+\subsubsection{Utilisabilité}
+
+\begin{itemize}
+    \item Interface responsive (desktop, tablet, mobile)
+    \item Design intuitif et moderne
+    \item Feedback visuel pour les actions utilisateur
+    \item Messages d'erreur explicites
+    \item Documentation intégrée
+\end{itemize}
+
+\subsubsection{Maintenabilité}
+
+\begin{itemize}
+    \item Code TypeScript typé
+    \item Architecture en couches
+    \item Tests unitaires et d'intégration
+    \item Documentation technique
+    \item Conventions de nommage claires
+\end{itemize}
+
+\subsubsection{Disponibilité}
+
+\begin{itemize}
+    \item Disponibilité cible : 99\%
+    \item Gestion des erreurs gracieuse
+    \item Fallback pour les API externes
+    \item Système de cache pour optimisation
+\end{itemize}
+
+\section{Modélisation UML}
+
+\subsection{Définition}
+
+UML (Unified Modeling Language) est un langage de modélisation graphique standardisé permettant de spécifier, visualiser, construire et documenter un système logiciel.
+
+Nous utilisons les diagrammes suivants :
+\begin{itemize}
+    \item \textbf{Diagramme de cas d'utilisation} : Vue fonctionnelle du système
+    \item \textbf{Diagrammes de séquence} : Interactions temporelles entre objets
+    \item \textbf{Diagramme de classes} : Structure statique du système
+\end{itemize}
+
+\subsection{Diagramme de Cas d'Utilisation Global}
+
+Le diagramme de cas d'utilisation global présente les principales fonctionnalités du système.
+
+% Placeholder pour diagramme de cas d'utilisation global
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Diagramme de cas d'utilisation global]\\
+    Insérer un diagramme UML montrant :\\
+    - Acteurs : Utilisateur, Administrateur, Système LLM, YouTube API\\
+    - Cas d'utilisation principaux : S'authentifier, Chatter avec LLM, Analyser document, Générer graphique, Consulter recommandations YouTube, Publier post, Générer exercices, Administrer plateforme}}
+    \caption{Diagramme de cas d'utilisation global de SynapseAI}
+    \label{fig:uc-global}
+\end{figure}
+
+\subsection{Acteurs du Système}
+
+\begin{table}[H]
+\centering
+\caption{Description des acteurs}
+\label{tab:acteurs}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Acteur} & \textbf{Description} \\
+\hline
+Utilisateur & Personne utilisant la plateforme pour apprendre, chatter avec les LLM, analyser des documents, générer du contenu \\
+\hline
+Administrateur & Utilisateur privilégié gérant la plateforme, les utilisateurs et le contenu communautaire \\
+\hline
+Système LLM & Services externes (OpenAI, Anthropic, Google) fournissant les capacités d'IA \\
+\hline
+YouTube API & Service externe fournissant les recommandations vidéo \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Cas d'Utilisation Détaillés}
+
+\subsubsection{CU01 : S'authentifier}
+
+\begin{table}[H]
+\centering
+\caption{Description du cas d'utilisation "S'authentifier"}
+\label{tab:cu-auth}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Attribut} & \textbf{Description} \\
+\hline
+Identifiant & CU01 \\
+\hline
+Nom & S'authentifier \\
+\hline
+Acteurs & Utilisateur \\
+\hline
+Préconditions & L'utilisateur possède un compte ou utilise Google OAuth \\
+\hline
+Postconditions & L'utilisateur est authentifié et peut accéder à la plateforme \\
+\hline
+Scénario nominal & 
+1. L'utilisateur accède à la page de connexion\\
+2. L'utilisateur saisit ses identifiants (email/password) ou clique sur "Sign in with Google"\\
+3. Le système vérifie les identifiants\\
+4. Le système génère un token JWT\\
+5. L'utilisateur est redirigé vers le dashboard \\
+\hline
+Scénarios alternatifs & 
+- A1: Identifiants incorrects → message d'erreur\\
+- A2: Compte non vérifié → redirection vers vérification email\\
+- A3: Échec OAuth Google → message d'erreur \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{CU02 : Chatter avec un modèle LLM}
+
+\begin{table}[H]
+\centering
+\caption{Description du cas d'utilisation "Chatter avec un modèle LLM"}
+\label{tab:cu-chat}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Attribut} & \textbf{Description} \\
+\hline
+Identifiant & CU02 \\
+\hline
+Nom & Chatter avec un modèle LLM \\
+\hline
+Acteurs & Utilisateur, Système LLM \\
+\hline
+Préconditions & L'utilisateur est authentifié \\
+\hline
+Postconditions & La conversation est sauvegardée dans l'historique \\
+\hline
+Scénario nominal & 
+1. L'utilisateur sélectionne un modèle (GPT-4/Claude/Gemini)\\
+2. L'utilisateur saisit un message\\
+3. Le système envoie la requête à l'API du modèle\\
+4. Le système reçoit et affiche la réponse\\
+5. Le système sauvegarde l'échange dans MongoDB\\
+6. L'utilisateur peut continuer la conversation \\
+\hline
+Scénarios alternatifs & 
+- A1: API indisponible → message d'erreur et suggestion de changer de modèle\\
+- A2: Timeout → retry automatique\\
+- A3: Quota dépassé → notification à l'utilisateur \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{CU03 : Analyser un document}
+
+\begin{table}[H]
+\centering
+\caption{Description du cas d'utilisation "Analyser un document"}
+\label{tab:cu-analyse}
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Attribut} & \textbf{Description} \\
+\hline
+Identifiant & CU03 \\
+\hline
+Nom & Analyser un document \\
+\hline
+Acteurs & Utilisateur, Système LLM \\
+\hline
+Préconditions & L'utilisateur est authentifié et possède un document \\
+\hline
+Postconditions & Le document est analysé et les résultats sont affichés \\
+\hline
+Scénario nominal & 
+1. L'utilisateur accède au workspace\\
+2. L'utilisateur uploade un document (PDF/DOCX/TXT)\\
+3. Le système extrait le texte du document\\
+4. Le système envoie le texte au LLM pour analyse\\
+5. Le LLM génère un résumé et extrait les concepts clés\\
+6. Les résultats sont affichés à l'utilisateur\\
+7. L'utilisateur peut poser des questions sur le document \\
+\hline
+Scénarios alternatifs & 
+- A1: Format non supporté → message d'erreur\\
+- A2: Document trop volumineux → traitement par chunks\\
+- A3: Erreur d'extraction → notification à l'utilisateur \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Spécification des Sprints}
+
+\subsection{Sprint 1 : Infrastructure et Chat}
+
+\textbf{Objectif} : Mettre en place l'architecture de base et l'interface de chat multi-LLM
+
+\textbf{User Stories} : US01, US02, US03, US04, US05, US06, US07, US08
+
+\textbf{Durée} : 4 semaines
+
+\subsection{Sprint 2 : Fonctionnalités Avancées}
+
+\textbf{Objectif} : Implémenter l'analyse de documents, la génération de graphiques et les recommandations YouTube
+
+\textbf{User Stories} : US09, US10, US11, US12, US13, US14, US15
+
+\textbf{Durée} : 4 semaines
+
+\subsection{Sprint 3 : Communauté et Administration}
+
+\textbf{Objectif} : Développer l'espace communautaire et les outils d'administration
+
+\textbf{User Stories} : US16, US17, US18, US19, US20, US21, US22, US23
+
+\textbf{Durée} : 4 semaines
+
+\section{Environnement de Travail}
+
+\subsection{Environnement Matériel}
+
+\begin{table}[H]
+\centering
+\caption{Environnement matériel de développement}
+\label{tab:env-materiel}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Composant} & \textbf{Spécifications} \\
+\hline
+Processeur & Intel Core i7 / AMD Ryzen 7 (min) \\
+\hline
+RAM & 16 GB minimum \\
+\hline
+Stockage & SSD 256 GB minimum \\
+\hline
+Connexion & Internet haut débit (pour API calls) \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Environnement Logiciel}
+
+\begin{table}[H]
+\centering
+\caption{Environnement logiciel de développement}
+\label{tab:env-logiciel}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Logiciel} & \textbf{Version} \\
+\hline
+Système d'exploitation & Windows 10/11, macOS, Linux \\
+\hline
+Node.js & v20.x \\
+\hline
+npm & v10.x \\
+\hline
+VS Code & Latest \\
+\hline
+MongoDB & v7.x \\
+\hline
+Git & v2.x \\
+\hline
+Postman & Latest (tests API) \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Technologies et Langages Utilisés}
+
+\subsubsection{Frontend}
+
+\begin{itemize}
+    \item \textbf{Next.js 14} : Framework React avec SSR/SSG
+    \item \textbf{React 18} : Bibliothèque UI
+    \item \textbf{TypeScript 5} : Langage typé
+    \item \textbf{Tailwind CSS} : Framework CSS utility-first
+    \item \textbf{Chart.js} : Bibliothèque de graphiques
+    \item \textbf{Framer Motion} : Animations
+    \item \textbf{Zustand} : Gestion d'état légère
+\end{itemize}
+
+\subsubsection{Backend}
+
+\begin{itemize}
+    \item \textbf{Next.js API Routes} : Endpoints REST
+    \item \textbf{Node.js} : Runtime JavaScript
+    \item \textbf{TypeScript} : Typage côté serveur
+    \item \textbf{Mongoose} : ODM pour MongoDB
+    \item \textbf{JWT} : Authentification
+    \item \textbf{bcrypt} : Hachage de mots de passe
+    \item \textbf{NextAuth.js} : OAuth integration
+\end{itemize}
+
+\subsubsection{Base de Données}
+
+\begin{itemize}
+    \item \textbf{MongoDB} : Base NoSQL
+    \item \textbf{Mongoose Schemas} : Modélisation de données
+\end{itemize}
+
+\subsubsection{APIs Externes}
+
+\begin{itemize}
+    \item \textbf{OpenAI API} : GPT-4
+    \item \textbf{Anthropic API} : Claude
+    \item \textbf{Google Gemini API} : Gemini
+    \item \textbf{YouTube Data API v3} : Recommandations vidéo
+\end{itemize}
+
+\subsubsection{Outils de Développement}
+
+\begin{itemize}
+    \item \textbf{ESLint} : Linter JavaScript/TypeScript
+    \item \textbf{Prettier} : Formateur de code
+    \item \textbf{Git} : Contrôle de version
+    \item \textbf{GitHub} : Hébergement de code
+    \item \textbf{Vercel} : Déploiement
+\end{itemize}
+
+% Placeholder pour stack technologique
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.85\textwidth}{\centering [PLACEHOLDER - Stack technologique]\\Insérer un diagramme montrant l'architecture en couches avec Frontend (Next.js, React), Backend (API Routes, Node.js), Base de données (MongoDB) et APIs externes}}
+    \caption{Stack technologique de SynapseAI}
+    \label{fig:stack-tech}
+\end{figure}
+
+\section{Conclusion}
+
+Dans ce chapitre, nous avons présenté l'état de l'art des technologies clés utilisées dans SynapseAI, notamment les modèles de langage GPT-4, Claude et Gemini, ainsi que les frameworks web modernes comme Next.js et React. Nous avons également spécifié de manière détaillée les besoins fonctionnels et non fonctionnels du système à travers un Product Backlog complet.
+
+La modélisation UML nous a permis de visualiser l'architecture fonctionnelle du système avec les cas d'utilisation principaux. Enfin, nous avons décrit l'environnement de développement et la stack technologique retenue.
+
+Le chapitre suivant détaillera la réalisation du Sprint 1, qui pose les fondations de la plateforme avec l'authentification et l'interface de chat multi-LLM.
+

@@ -1,0 +1,860 @@
+
+\chapter{Sprint 2 : Fonctionnalités Avancées d'IA}
+\label{chap:sprint2}
+
+\section{Introduction}
+
+Le Sprint 2 vise à enrichir la plateforme SynapseAI avec des fonctionnalités avancées exploitant pleinement les capacités des modèles de langage. Ce sprint se concentre sur trois axes principaux : l'analyse intelligente de documents, la génération automatique de graphiques et visualisations, et l'intégration de recommandations vidéo YouTube contextuelles.
+
+Ces fonctionnalités transforment SynapseAI d'un simple chatbot en une véritable plateforme d'apprentissage intelligente et interactive.
+
+\section{Backlog du Sprint 2}
+
+\subsection{User Stories Sélectionnées}
+
+\begin{table}[H]
+\centering
+\caption{Backlog du Sprint 2}
+\label{tab:backlog-sprint2}
+\begin{tabular}{|l|p{7cm}|c|c|}
+\hline
+\textbf{ID} & \textbf{User Story} & \textbf{Priority} & \textbf{Points} \\
+\hline
+US09 & Uploader un document pour analyse & Moyenne & 8 \\
+\hline
+US10 & Obtenir un résumé de document & Moyenne & 5 \\
+\hline
+US11 & Extraire les concepts clés d'un document & Moyenne & 5 \\
+\hline
+US12 & Générer des graphiques automatiquement & Moyenne & 8 \\
+\hline
+US13 & Personnaliser les graphiques & Moyenne & 5 \\
+\hline
+US14 & Obtenir recommandations YouTube pertinentes & Moyenne & 8 \\
+\hline
+US15 & Visualiser vidéos recommandées dans l'interface & Moyenne & 3 \\
+\hline
+\multicolumn{3}{|r|}{\textbf{Total}} & \textbf{42} \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Critères d'Acceptation}
+
+\subsubsection{US09-11 : Analyse de Documents}
+
+\begin{itemize}
+    \item Interface de workspace avec zone de drag\&drop
+    \item Support des formats PDF, DOCX, TXT
+    \item Extraction automatique du texte
+    \item Génération de résumé structuré par le LLM
+    \item Extraction des concepts clés et mots-clés
+    \item Possibilité de poser des questions sur le document
+    \item Affichage du contenu analysé
+\end{itemize}
+
+\subsubsection{US12-13 : Génération de Graphiques}
+
+\begin{itemize}
+    \item Commande spéciale pour générer des graphiques
+    \item Support de 4 types : Line, Bar, Pie, Doughnut
+    \item Intégration Chart.js
+    \item Génération automatique de données de démonstration
+    \item Options de personnalisation (couleurs, titres, légendes)
+    \item Export des graphiques en image
+    \item Graphiques interactifs et responsives
+\end{itemize}
+
+\subsubsection{US14-15 : Recommandations YouTube}
+
+\begin{itemize}
+    \item Détection automatique des sujets de conversation
+    \item Extraction de mots-clés pertinents
+    \item Recherche via YouTube Data API
+    \item Affichage de 5-10 vidéos pertinentes
+    \item Thumbnails, titres et durées
+    \item Possibilité de lancer la vidéo dans l'interface
+    \item Mise à jour des recommandations selon le contexte
+\end{itemize}
+
+\section{Raffinement des Cas d'Utilisation}
+
+\subsection{Cas d'Utilisation : Analyser un Document}
+
+% Placeholder pour diagramme analyse document
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.85\textwidth}{\centering [PLACEHOLDER - Diagramme de cas d'utilisation : Analyser Document]\\
+    Montrer acteurs Utilisateur et Système LLM\\
+    Include : Upload fichier, Extraire texte, Générer résumé, Extraire concepts}}
+    \caption{Diagramme de cas d'utilisation : Analyser un document}
+    \label{fig:uc-analyse-doc}
+\end{figure}
+
+\subsection{Cas d'Utilisation : Générer un Graphique}
+
+% Placeholder pour diagramme génération graphique
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.85\textwidth}{\centering [PLACEHOLDER - Diagramme de cas d'utilisation : Générer Graphique]\\
+    Montrer acteur Utilisateur avec système Chart.js\\
+    Include : Sélectionner type, Configurer données, Personnaliser apparence, Exporter}}
+    \caption{Diagramme de cas d'utilisation : Générer un graphique}
+    \label{fig:uc-graphique}
+\end{figure}
+
+\section{Diagrammes UML}
+
+\subsection{Diagramme de Séquence : Analyse de Document}
+
+% Placeholder pour séquence analyse document
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Diagramme de séquence : Analyse Document]\\
+    1. Utilisateur → Upload document\\
+    2. Frontend → API /api/documents\\
+    3. Server → Extraire texte (PDF.js/Mammoth)\\
+    4. Server → LLM API (résumé + concepts)\\
+    5. LLM → Retour analyse\\
+    6. Server → Save in MongoDB\\
+    7. Frontend → Afficher résultats}}
+    \caption{Diagramme de séquence : Processus d'analyse de document}
+    \label{fig:seq-analyse-doc}
+\end{figure}
+
+\subsection{Diagramme de Séquence : Génération de Graphique}
+
+% Placeholder pour séquence graphique
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Diagramme de séquence : Génération Graphique]\\
+    1. Utilisateur → Demande génération graphique\\
+    2. Frontend → Detect chart request\\
+    3. Frontend → Call generateChart()\\
+    4. Chart.js → Create canvas\\
+    5. Chart.js → Render chart\\
+    6. Frontend → Display chart interactif}}
+    \caption{Diagramme de séquence : Génération d'un graphique}
+    \label{fig:seq-graphique}
+\end{figure}
+
+\subsection{Diagramme de Séquence : Recommandations YouTube}
+
+% Placeholder pour séquence YouTube
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Diagramme de séquence : YouTube Recommendations]\\
+    1. Utilisateur → Envoie message\\
+    2. Server → Analyser contenu conversation\\
+    3. Server → Extraire mots-clés (extractKeywords)\\
+    4. Server → YouTube Data API search\\
+    5. YouTube API → Retour liste vidéos\\
+    6. Server → Format data\\
+    7. Frontend → Afficher recommandations}}
+    \caption{Diagramme de séquence : Recommandations YouTube}
+    \label{fig:seq-youtube}
+\end{figure}
+
+\subsection{Diagramme de Classes Sprint 2}
+
+% Placeholder pour diagramme de classes
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Diagramme de classes Sprint 2]\\
+    Nouvelles classes :\\
+    - \textbf{Document} : \_id, userId, filename, content, summary, concepts[], uploadedAt\\
+    - \textbf{Chart} : \_id, userId, type, data, options, createdAt\\
+    - \textbf{VideoRecommendation} : videoId, title, thumbnail, duration, channelTitle\\
+    Relations avec User et Chat}}
+    \caption{Diagramme de classes enrichi (Sprint 2)}
+    \label{fig:classes-sprint2}
+\end{figure}
+
+\section{Réalisation du Sprint 2}
+
+\subsection{Implémentation de l'Analyse de Documents}
+
+\subsubsection{Modèle Document}
+
+\begin{lstlisting}[language=JavaScript, caption=Schéma Mongoose Document, label=code:document-schema]
+// src/models/Document.ts
+import mongoose from 'mongoose';
+
+const DocumentSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
+  filename: {
+    type: String,
+    required: true,
+  },
+  fileType: {
+    type: String,
+    enum: ['pdf', 'docx', 'txt'],
+    required: true,
+  },
+  content: {
+    type: String,
+    required: true,
+  },
+  summary: {
+    type: String,
+  },
+  concepts: [{
+    type: String,
+  }],
+  uploadedAt: {
+    type: Date,
+    default: Date.now,
+  },
+}, {
+  timestamps: true,
+});
+
+export default mongoose.models.Document || 
+  mongoose.model('Document', DocumentSchema);
+\end{lstlisting}
+
+\subsubsection{API Analyse de Document}
+
+\begin{lstlisting}[language=JavaScript, caption=API Route pour l'analyse de documents, label=code:api-documents]
+// src/app/api/documents/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import Document from '@/models/Document';
+import { connectDB } from '@/lib/db';
+import { callLLM } from '@/lib/llm';
+import { extractTextFromPDF } from '@/lib/pdf-extractor';
+import { extractTextFromDOCX } from '@/lib/docx-extractor';
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    await connectDB();
+
+    const formData = await req.formData();
+    const file = formData.get('file') as File;
+
+    if (!file) {
+      return NextResponse.json(
+        { error: 'No file provided' },
+        { status: 400 }
+      );
+    }
+
+    // Extraire le texte selon le type de fichier
+    let content = '';
+    const fileType = file.name.split('.').pop()?.toLowerCase();
+
+    if (fileType === 'pdf') {
+      const buffer = await file.arrayBuffer();
+      content = await extractTextFromPDF(buffer);
+    } else if (fileType === 'docx') {
+      const buffer = await file.arrayBuffer();
+      content = await extractTextFromDOCX(buffer);
+    } else if (fileType === 'txt') {
+      content = await file.text();
+    } else {
+      return NextResponse.json(
+        { error: 'Unsupported file type' },
+        { status: 400 }
+      );
+    }
+
+    // Générer résumé et extraire concepts via LLM
+    const analysisPrompt = `
+Analyse le document suivant et fournis :
+1. Un résumé détaillé (200-300 mots)
+2. Une liste des concepts clés (5-10 concepts)
+
+Document :
+${content.substring(0, 8000)}
+
+Format ta réponse ainsi :
+RÉSUMÉ:
+[ton résumé ici]
+
+CONCEPTS:
+- [concept 1]
+- [concept 2]
+...
+    `;
+
+    const analysis = await callLLM('gpt-4', [
+      { role: 'user', content: analysisPrompt }
+    ]);
+
+    // Parser la réponse
+    const summaryMatch = analysis.match(/RÉSUMÉ:\s*([\s\S]*?)CONCEPTS:/);
+    const conceptsMatch = analysis.match(/CONCEPTS:\s*([\s\S]*)/);
+
+    const summary = summaryMatch ? summaryMatch[1].trim() : '';
+    const conceptsText = conceptsMatch ? conceptsMatch[1] : '';
+    const concepts = conceptsText
+      .split('\n')
+      .filter(line => line.trim().startsWith('-'))
+      .map(line => line.replace(/^-\s*/, '').trim());
+
+    // Sauvegarder dans la base de données
+    const document = await Document.create({
+      userId: session.user.id,
+      filename: file.name,
+      fileType: fileType,
+      content: content,
+      summary: summary,
+      concepts: concepts,
+    });
+
+    return NextResponse.json({
+      documentId: document._id,
+      filename: file.name,
+      summary: summary,
+      concepts: concepts,
+    });
+
+  } catch (error) {
+    console.error('Document analysis error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    await connectDB();
+
+    const documents = await Document.find({
+      userId: session.user.id
+    }).sort({ uploadedAt: -1 });
+
+    return NextResponse.json({ documents });
+
+  } catch (error) {
+    console.error('Get documents error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+\end{lstlisting}
+
+\subsection{Implémentation de la Génération de Graphiques}
+
+\subsubsection{Composant DynamicChart}
+
+\begin{lstlisting}[language=JavaScript, caption=Composant React pour génération de graphiques, label=code:dynamic-chart]
+// src/components/charts/DynamicChart.tsx
+'use client';
+
+import React from 'react';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+interface ChartData {
+  labels: string[];
+  datasets: {
+    label: string;
+    data: number[];
+    backgroundColor?: string | string[];
+    borderColor?: string;
+    borderWidth?: number;
+  }[];
+}
+
+interface DynamicChartProps {
+  type: 'line' | 'bar' | 'pie' | 'doughnut';
+  data: ChartData;
+  options?: any;
+}
+
+export default function DynamicChart({ 
+  type, 
+  data, 
+  options 
+}: DynamicChartProps) {
+  const defaultOptions = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      title: {
+        display: true,
+        text: options?.title || 'Chart',
+      },
+    },
+  };
+
+  const chartOptions = { ...defaultOptions, ...options };
+
+  const renderChart = () => {
+    switch (type) {
+      case 'line':
+        return <Line data={data} options={chartOptions} />;
+      case 'bar':
+        return <Bar data={data} options={chartOptions} />;
+      case 'pie':
+        return <Pie data={data} options={chartOptions} />;
+      case 'doughnut':
+        return <Doughnut data={data} options={chartOptions} />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="chart-container" style={{ 
+      maxWidth: '600px', 
+      margin: '20px auto' 
+    }}>
+      {renderChart()}
+    </div>
+  );
+}
+\end{lstlisting}
+
+\subsubsection{Fonction de Génération de Graphiques}
+
+\begin{lstlisting}[language=JavaScript, caption=Utilitaire de génération de graphiques, label=code:generate-chart]
+// src/lib/chart-generator.ts
+
+export interface ChartConfig {
+  type: 'line' | 'bar' | 'pie' | 'doughnut';
+  title: string;
+  labels: string[];
+  datasets: {
+    label: string;
+    data: number[];
+  }[];
+}
+
+// Palette de couleurs prédéfinies
+const COLORS = [
+  'rgba(255, 99, 132, 0.8)',
+  'rgba(54, 162, 235, 0.8)',
+  'rgba(255, 206, 86, 0.8)',
+  'rgba(75, 192, 192, 0.8)',
+  'rgba(153, 102, 255, 0.8)',
+  'rgba(255, 159, 64, 0.8)',
+];
+
+export function generateChart(config: ChartConfig) {
+  const { type, title, labels, datasets } = config;
+
+  // Préparer les datasets avec couleurs
+  const formattedDatasets = datasets.map((dataset, index) => {
+    const baseColor = COLORS[index % COLORS.length];
+
+    if (type === 'line') {
+      return {
+        label: dataset.label,
+        data: dataset.data,
+        borderColor: baseColor,
+        backgroundColor: baseColor.replace('0.8', '0.2'),
+        borderWidth: 2,
+      };
+    } else if (type === 'bar') {
+      return {
+        label: dataset.label,
+        data: dataset.data,
+        backgroundColor: baseColor,
+        borderColor: baseColor.replace('0.8', '1'),
+        borderWidth: 1,
+      };
+    } else if (type === 'pie' || type === 'doughnut') {
+      return {
+        label: dataset.label,
+        data: dataset.data,
+        backgroundColor: labels.map((_, i) => 
+          COLORS[i % COLORS.length]
+        ),
+        borderColor: '#fff',
+        borderWidth: 2,
+      };
+    }
+
+    return dataset;
+  });
+
+  return {
+    type,
+    data: {
+      labels,
+      datasets: formattedDatasets,
+    },
+    options: {
+      title,
+      responsive: true,
+      maintainAspectRatio: true,
+    },
+  };
+}
+
+// Fonction pour générer des données de démonstration
+export function generateSampleData(type: string) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+  
+  switch (type) {
+    case 'line':
+      return generateChart({
+        type: 'line',
+        title: 'Evolution mensuelle',
+        labels: months,
+        datasets: [
+          {
+            label: 'Dataset 1',
+            data: [65, 59, 80, 81, 56, 55],
+          },
+          {
+            label: 'Dataset 2',
+            data: [28, 48, 40, 19, 86, 27],
+          },
+        ],
+      });
+
+    case 'bar':
+      return generateChart({
+        type: 'bar',
+        title: 'Comparaison par mois',
+        labels: months,
+        datasets: [
+          {
+            label: 'Ventes',
+            data: [12, 19, 3, 5, 2, 3],
+          },
+        ],
+      });
+
+    case 'pie':
+      return generateChart({
+        type: 'pie',
+        title: 'Répartition',
+        labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple'],
+        datasets: [
+          {
+            label: 'Votes',
+            data: [12, 19, 3, 5, 8],
+          },
+        ],
+      });
+
+    case 'doughnut':
+      return generateChart({
+        type: 'doughnut',
+        title: 'Distribution',
+        labels: ['A', 'B', 'C', 'D'],
+        datasets: [
+          {
+            label: 'Parts',
+            data: [30, 20, 25, 25],
+          },
+        ],
+      });
+
+    default:
+      return null;
+  }
+}
+\end{lstlisting}
+
+\subsection{Implémentation des Recommandations YouTube}
+
+\subsubsection{Service YouTube API}
+
+\begin{lstlisting}[language=JavaScript, caption=Intégration YouTube Data API, label=code:youtube-service]
+// src/lib/youtube.ts
+import { google } from 'googleapis';
+
+const youtube = google.youtube({
+  version: 'v3',
+  auth: process.env.YOUTUBE_API_KEY,
+});
+
+export interface YouTubeVideo {
+  videoId: string;
+  title: string;
+  thumbnail: string;
+  duration: string;
+  channelTitle: string;
+  viewCount: string;
+  publishedAt: string;
+}
+
+export async function searchVideos(
+  query: string,
+  maxResults: number = 10
+): Promise<YouTubeVideo[]> {
+  try {
+    const response = await youtube.search.list({
+      part: ['snippet'],
+      q: query,
+      type: ['video'],
+      maxResults: maxResults,
+      videoEmbeddable: 'true',
+      videoCategoryId: '27', // Education category
+      relevanceLanguage: 'fr',
+      order: 'relevance',
+    });
+
+    if (!response.data.items) {
+      return [];
+    }
+
+    // Récupérer les détails supplémentaires
+    const videoIds = response.data.items
+      .map(item => item.id?.videoId)
+      .filter(Boolean);
+
+    const detailsResponse = await youtube.videos.list({
+      part: ['contentDetails', 'statistics'],
+      id: videoIds as string[],
+    });
+
+    const videos: YouTubeVideo[] = response.data.items.map((item, index) => {
+      const details = detailsResponse.data.items?.[index];
+      
+      return {
+        videoId: item.id?.videoId || '',
+        title: item.snippet?.title || '',
+        thumbnail: item.snippet?.thumbnails?.medium?.url || '',
+        duration: details?.contentDetails?.duration || '',
+        channelTitle: item.snippet?.channelTitle || '',
+        viewCount: details?.statistics?.viewCount || '0',
+        publishedAt: item.snippet?.publishedAt || '',
+      };
+    });
+
+    return videos;
+
+  } catch (error) {
+    console.error('YouTube API error:', error);
+    return [];
+  }
+}
+
+export function extractKeywords(text: string): string[] {
+  // Supprimer les stop words et extraire les mots clés
+  const stopWords = ['le', 'la', 'les', 'un', 'une', 'des', 
+    'et', 'ou', 'mais', 'donc', 'car', 'de', 'du', 'à'];
+  
+  const words = text
+    .toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter(word => word.length > 3)
+    .filter(word => !stopWords.includes(word));
+
+  // Compter les occurrences
+  const wordCount: { [key: string]: number } = {};
+  words.forEach(word => {
+    wordCount[word] = (wordCount[word] || 0) + 1;
+  });
+
+  // Trier par fréquence et retourner le top 5
+  const sortedWords = Object.entries(wordCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([word]) => word);
+
+  return sortedWords;
+}
+\end{lstlisting}
+
+\subsubsection{API Recommandations YouTube}
+
+\begin{lstlisting}[language=JavaScript, caption=API Route pour recommandations YouTube, label=code:api-youtube]
+// src/app/api/recommendations/youtube/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { searchVideos, extractKeywords } from '@/lib/youtube';
+
+export async function POST(req: NextRequest) {
+  try {
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const { conversationText } = await req.json();
+
+    if (!conversationText) {
+      return NextResponse.json(
+        { error: 'No conversation text provided' },
+        { status: 400 }
+      );
+    }
+
+    // Extraire les mots-clés de la conversation
+    const keywords = extractKeywords(conversationText);
+
+    if (keywords.length === 0) {
+      return NextResponse.json({ videos: [] });
+    }
+
+    // Construire la requête de recherche
+    const searchQuery = keywords.join(' ');
+
+    // Rechercher des vidéos sur YouTube
+    const videos = await searchVideos(searchQuery, 8);
+
+    return NextResponse.json({
+      keywords,
+      videos,
+      query: searchQuery,
+    });
+
+  } catch (error) {
+    console.error('YouTube recommendations error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+\end{lstlisting}
+
+\subsection{Interfaces Utilisateur Sprint 2}
+
+\subsubsection{Interface Workspace Documents}
+
+% Placeholder pour capture workspace
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Capture d'écran : Document Workspace]\\
+    Montrer interface avec :\\
+    - Zone drag\&drop pour upload\\
+    - Liste des documents uploadés\\
+    - Panneau d'analyse avec résumé et concepts\\
+    - Zone de questions sur le document}}
+    \caption{Interface du workspace d'analyse de documents}
+    \label{fig:ui-workspace}
+\end{figure}
+
+\subsubsection{Génération de Graphiques}
+
+% Placeholder pour capture graphiques
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.9\textwidth}{\centering [PLACEHOLDER - Capture d'écran : Graphiques générés]\\
+    Montrer exemples de graphiques :\\
+    - Line chart avec deux datasets\\
+    - Bar chart avec données mensuelles\\
+    - Pie chart avec répartition\\
+    - Options de personnalisation}}
+    \caption{Exemples de graphiques générés automatiquement}
+    \label{fig:ui-charts}
+\end{figure}
+
+\subsubsection{Recommandations YouTube}
+
+% Placeholder pour capture YouTube
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.95\textwidth}{\centering [PLACEHOLDER - Capture d'écran : Recommandations YouTube]\\
+    Montrer panneau de recommandations avec :\\
+    - Mots-clés détectés\\
+    - Liste de vidéos avec thumbnails\\
+    - Titres, chaînes, durées\\
+    - Bouton play pour chaque vidéo}}
+    \caption{Panneau de recommandations vidéo YouTube contextuelles}
+    \label{fig:ui-youtube}
+\end{figure}
+
+\subsection{Tests et Validation Sprint 2}
+
+\begin{table}[H]
+\centering
+\caption{Résultats des tests fonctionnels Sprint 2}
+\label{tab:tests-sprint2}
+\begin{tabular}{|l|p{6cm}|c|}
+\hline
+\textbf{Test} & \textbf{Description} & \textbf{Résultat} \\
+\hline
+T13 & Upload document PDF & ✓ Pass \\
+\hline
+T14 & Upload document DOCX & ✓ Pass \\
+\hline
+T15 & Upload document TXT & ✓ Pass \\
+\hline
+T16 & Génération résumé de document & ✓ Pass \\
+\hline
+T17 & Extraction concepts clés & ✓ Pass \\
+\hline
+T18 & Questions sur le document & ✓ Pass \\
+\hline
+T19 & Génération graphique Line & ✓ Pass \\
+\hline
+T20 & Génération graphique Bar & ✓ Pass \\
+\hline
+T21 & Génération graphique Pie & ✓ Pass \\
+\hline
+T22 & Génération graphique Doughnut & ✓ Pass \\
+\hline
+T23 & Personnalisation graphiques & ✓ Pass \\
+\hline
+T24 & Extraction mots-clés conversation & ✓ Pass \\
+\hline
+T25 & Recherche vidéos YouTube & ✓ Pass \\
+\hline
+T26 & Affichage recommandations & ✓ Pass \\
+\hline
+T27 & Lecture vidéo intégrée & ✓ Pass \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+
+Le Sprint 2 a permis d'enrichir considérablement la plateforme SynapseAI avec des fonctionnalités avancées qui transforment l'expérience utilisateur. L'analyse intelligente de documents permet aux utilisateurs d'extraire rapidement les informations essentielles de leurs fichiers. La génération automatique de graphiques offre des capacités de visualisation de données directement dans l'interface. Les recommandations YouTube contextuelles créent un pont entre les conversations avec l'IA et des ressources vidéo pertinentes.
+
+Ces trois fonctionnalités majeures sont opérationnelles et passent tous les tests fonctionnels. La plateforme offre maintenant une expérience d'apprentissage riche et multimodale.
+
+Le chapitre suivant présente le Sprint 3, qui se concentre sur l'aspect communautaire et les outils d'administration de la plateforme.
+
