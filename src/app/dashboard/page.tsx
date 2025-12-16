@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Sidebar from "@/components/dashboard/Sidebar";
+import NotificationBell from "@/components/NotificationBell";
 
 import { tokenManager } from "@/lib/api";
 import {
@@ -269,16 +270,21 @@ export default function DashboardPage() {
         <div className="flex-1 overflow-y-auto p-8">
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <div className="flex items-center gap-4">
-              {userProfile.profilePicture && (
-                <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-blue-500/30">
-                  <img src={userProfile.profilePicture} alt="" className="w-full h-full object-cover" />
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                {userProfile.profilePicture && (
+                  <div className="w-16 h-16 rounded-full overflow-hidden ring-2 ring-blue-500/30">
+                    <img src={userProfile.profilePicture} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div>
+                  <h1 className="text-3xl font-bold text-white mb-1">Welcome back, {userProfile.name || 'User'}! 👋</h1>
+                  <p className="text-gray-400">Here's what's happening with your account today.</p>
                 </div>
-              )}
-              <div>
-                <h1 className="text-3xl font-bold text-white mb-1">Welcome back, {userProfile.name || 'User'}! 👋</h1>
-                <p className="text-gray-400">Here's what's happening with your account today.</p>
               </div>
+              
+              {/* Notification Bell */}
+              <NotificationBell />
             </div>
           </motion.div>
 

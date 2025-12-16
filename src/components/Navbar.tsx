@@ -8,6 +8,7 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { navLinks } from '@/lib/data';
 import Icon from './Icon';
 import { fadeIn } from '@/lib/animation';
+import NotificationBell from './NotificationBell';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -140,7 +141,8 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Desktop Auth Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-3">
+            <NotificationBell />
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.98 }}>
               <Link
                 href="/login"

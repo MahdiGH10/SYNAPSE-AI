@@ -149,7 +149,9 @@ export default function SupportPage() {
             onClick={() => setShowTicketForm(true)}
             className="bg-gradient-to-br from-red-900/30 to-red-800/20 rounded-xl p-6 cursor-pointer border border-red-500/30 hover:border-red-500/60 transition-all"
           >
-            <AlertCircle className="w-10 h-10 text-red-400 mb-3" />
+            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-red-500/20 mb-4">
+              <AlertCircle className="w-6 h-6 text-red-400" />
+            </div>
             <h3 className="text-lg font-bold text-white mb-2">Report a Bug</h3>
             <p className="text-sm text-gray-400">Found something broken? Let us know!</p>
           </motion.div>
@@ -159,9 +161,11 @@ export default function SupportPage() {
             onClick={() => setShowTicketForm(true)}
             className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 rounded-xl p-6 cursor-pointer border border-blue-500/30 hover:border-blue-500/60 transition-all"
           >
-            <MessageSquare className="w-10 h-10 text-blue-400 mb-3" />
+            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-500/20 mb-4">
+              <MessageSquare className="w-6 h-6 text-blue-400" />
+            </div>
             <h3 className="text-lg font-bold text-white mb-2">Get Support</h3>
-            <p className="text-sm text-gray-400">Need help? We're here for you</p>
+            <p className="text-sm text-gray-400">Need help? We are here for you</p>
           </motion.div>
 
           <motion.div
@@ -169,7 +173,9 @@ export default function SupportPage() {
             onClick={() => setShowTicketForm(true)}
             className="bg-gradient-to-br from-green-900/30 to-green-800/20 rounded-xl p-6 cursor-pointer border border-green-500/30 hover:border-green-500/60 transition-all"
           >
-            <Plus className="w-10 h-10 text-green-400 mb-3" />
+            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-green-500/20 mb-4">
+              <Plus className="w-6 h-6 text-green-400" />
+            </div>
             <h3 className="text-lg font-bold text-white mb-2">Feature Request</h3>
             <p className="text-sm text-gray-400">Share your ideas with us</p>
           </motion.div>
@@ -205,6 +211,7 @@ export default function SupportPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
                 whileHover={{ scale: 1.02, boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)" }}
+                onClick={() => router.push(`/support/ticket/${ticket._id}`)}
                 className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-6 shadow-lg border border-gray-700 hover:border-blue-500 transition-all cursor-pointer"
               >
                 {/* Header */}

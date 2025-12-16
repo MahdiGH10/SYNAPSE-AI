@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Ticket from '@/models/Ticket';
 import User from '@/models/User';
+import Notification from '@/models/Notification';
 import { verifyToken } from '@/lib/jwt';
 
 // GET: Get a specific ticket
@@ -89,6 +90,9 @@ export async function PATCH(
     const body = await request.json();
     const { message, status, priority, assignedTo } = body;
 
+    // Track if admin is replying to create notification
+    const isAdminReply = message && (user.role === 'admin' || user.role === 'superadmin') && ticket.userId.toString() !== decoded.userId;
+
     // Add message to conversation
     if (message) {
       ticket.messages.push({
@@ -97,11 +101,38 @@ export async function PATCH(
         message,
         timestamp: new Date(),
       });
+
+      // Create notification for ticket owner if admin/superadmin replies
+      if (isAdminReply) {
+        await Notification.create({
+          userId: ticket.userId,
+          type: 'ticket_reply',
+          title: 'New Reply to Your Ticket',
+          message: `Admin replied to "${ticket.title}": ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`,
+          link: `/support/ticket/${ticket._id}`,
+          ticketId: ticket._id,
+          read: false,
+        });
+      }
     }
 
     // Admin/SuperAdmin can update status, priority, and assignment
     if (user.role === 'admin' || user.role === 'superadmin') {
-      if (status) ticket.status = status;
+      if (status && status !== ticket.status) {
+        const oldStatus = ticket.status;
+        ticket.status = status;
+        
+        // Notify user of status change
+        await Notification.create({
+          userId: ticket.userId,
+          type: 'ticket_status',
+          title: 'Ticket Status Updated',
+          message: `Your ticket "${ticket.title}" status changed from ${oldStatus} to ${status}`,
+          link: `/support/ticket/${ticket._id}`,
+          ticketId: ticket._id,
+          read: false,
+        });
+      }
       if (priority) ticket.priority = priority;
       if (assignedTo !== undefined) ticket.assignedTo = assignedTo;
     } else {
