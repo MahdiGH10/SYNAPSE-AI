@@ -103,7 +103,7 @@ export default function SupportPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black py-12 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -115,16 +115,65 @@ export default function SupportPage() {
               Get help with bugs, features, and support requests
             </p>
           </motion.div>
-          <motion.button
-            whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)" }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowTicketForm(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg transition-all shadow-lg shadow-blue-500/20"
-          >
-            <Plus className="w-5 h-5" />
-            New Ticket
-          </motion.button>
+          <div className="flex gap-3">
+            <motion.button
+              whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(239, 68, 68, 0.5)" }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowTicketForm(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-lg transition-all shadow-lg shadow-red-500/20"
+            >
+              <AlertCircle className="w-5 h-5" />
+              Report Bug
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)" }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowTicketForm(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg transition-all shadow-lg shadow-blue-500/20"
+            >
+              <Plus className="w-5 h-5" />
+              New Ticket
+            </motion.button>
+          </div>
         </div>
+
+        {/* Quick Action Cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+        >
+          <motion.div
+            whileHover={{ scale: 1.02, boxShadow: "0 0 30px rgba(239, 68, 68, 0.3)" }}
+            onClick={() => setShowTicketForm(true)}
+            className="bg-gradient-to-br from-red-900/30 to-red-800/20 rounded-xl p-6 cursor-pointer border border-red-500/30 hover:border-red-500/60 transition-all"
+          >
+            <AlertCircle className="w-10 h-10 text-red-400 mb-3" />
+            <h3 className="text-lg font-bold text-white mb-2">Report a Bug</h3>
+            <p className="text-sm text-gray-400">Found something broken? Let us know!</p>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ scale: 1.02, boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)" }}
+            onClick={() => setShowTicketForm(true)}
+            className="bg-gradient-to-br from-blue-900/30 to-blue-800/20 rounded-xl p-6 cursor-pointer border border-blue-500/30 hover:border-blue-500/60 transition-all"
+          >
+            <MessageSquare className="w-10 h-10 text-blue-400 mb-3" />
+            <h3 className="text-lg font-bold text-white mb-2">Get Support</h3>
+            <p className="text-sm text-gray-400">Need help? We're here for you</p>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ scale: 1.02, boxShadow: "0 0 30px rgba(16, 185, 129, 0.3)" }}
+            onClick={() => setShowTicketForm(true)}
+            className="bg-gradient-to-br from-green-900/30 to-green-800/20 rounded-xl p-6 cursor-pointer border border-green-500/30 hover:border-green-500/60 transition-all"
+          >
+            <Plus className="w-10 h-10 text-green-400 mb-3" />
+            <h3 className="text-lg font-bold text-white mb-2">Feature Request</h3>
+            <p className="text-sm text-gray-400">Share your ideas with us</p>
+          </motion.div>
+        </motion.div>
 
         {/* Tickets Grid */}
         {tickets.length === 0 ? (

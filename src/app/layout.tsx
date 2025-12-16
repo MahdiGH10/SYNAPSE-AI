@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/components/ui/Toast";
 import Providers from "@/components/Providers";
+import FloatingBugReportButton from "@/components/FloatingBugReportButton";
 
 
 
@@ -48,6 +49,7 @@ export default function RootLayout({
         <Providers>
           <ToastProvider>
             {children}
+            <FloatingBugReportButton />
           </ToastProvider>
         </Providers>
       </body>
