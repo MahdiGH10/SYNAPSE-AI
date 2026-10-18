@@ -11,7 +11,7 @@ export default function Logo({ size = 40, className = '', showText = true, iconO
   if (iconOnly) {
     return (
       <Image
-        src="/ChatGPT Image 14 déc. 2025, 13_00_56.png"
+        src="/logo-mark.png"
         alt="SynapseAI"
         width={size}
         height={size}

@@ -6,7 +6,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const MONGODB_URI = 'mongodb+srv://skandargharbi1342_db_user:skandar9656@cluster0.uuppguj.mongodb.net/SynapseAI';
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) { console.error('Set MONGODB_URI'); process.exit(1); }
 
 const UserSchema = new mongoose.Schema({
   name: String,
