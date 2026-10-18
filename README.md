@@ -1,323 +1,76 @@
 # SynapseAI
 
-A modern, full-stack AI chat application built with Next.js, TypeScript, Tailwind CSS, and Node.js. Features intelligent conversations, user authentication, and a beautiful responsive interface.
+Full-stack AI workspace built with Next.js: multi-model chat, document Q&A (RAG), document classification, and a support-ticket system with role-based admin tooling.
 
-## 🚀 Quick Start
+![Next.js](https://img.shields.io/badge/Next.js-16-black) ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue) ![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-green) ![LLMs](https://img.shields.io/badge/LLM-Gemini%20%7C%20Qwen%20(HF)-orange)
+
+## What it does
+
+| Area | Details |
+|---|---|
+| **LLM chat** | Streaming and non-streaming chat routes, model catalogue endpoint, conversation history persisted per user. Providers: Gemini and Qwen2.5-7B-Instruct via the Hugging Face router. |
+| **Document Q&A (RAG)** | Upload documents, retrieve relevant context from a RAG microservice, then answer with a category-aware system prompt (technical, financial, legal, scientific, business). |
+| **Document classifier** | scikit-learn model served behind `/api/classifier` (single + batch, returns class probabilities). |
+| **Auth** | Email/password + Google OAuth, JWT sessions, email verification, role model (user / admin / superadmin). |
+| **Support & admin** | Ticket submission, admin dashboard, ticket management, notifications, user preferences. |
+
+## System design
+
+```mermaid
+flowchart LR
+  UI["Next.js UI (App Router, Zustand)"] -->|JWT| API["Next.js API routes"]
+  API --> DB[("MongoDB / Mongoose")]
+  API -->|chat| LLM["Gemini API / HF Router (Qwen2.5)"]
+  API -->|"/rag/*"| RAG["RAG service (Python, :5001)"]
+  API -->|"/classifier"| CLF["Classifier service (scikit-learn, :5000)"]
+  API --> MAIL["SMTP (verification emails)"]
+  RAG --> LLM
+```
+
+Design choices worth noting:
+
+- **Thin API layer as a gateway.** Next.js routes own auth, validation and persistence; model-heavy work (RAG, classification) lives behind HTTP so it can be scaled and swapped independently.
+- **Category-aware prompting.** The RAG query route picks a system prompt from the predicted document category, so the same retrieval pipeline answers like an analyst, lawyer or researcher depending on the corpus.
+- **Provider abstraction for chat.** Chat requests are mapped from SynapseAI model names to provider models (Qwen2.5-7B-Instruct via the Hugging Face inference client), with a mock response when no token is configured so the UI runs offline.
+- **Role-based access.** Signed JWTs carry the user's role (user / admin / superadmin).
+
+## Run locally
 
 ```bash
-# Clone the repository
 git clone https://github.com/MahdiGH10/SYNAPSE-AI.git
 cd SYNAPSE-AI
-
-# Install dependencies
+cp .env.example .env.local     # fill in your own keys
 npm install
-cd backend && npm install && cd ..
-
-# Start development servers
-# Terminal 1 (Backend):
-cd backend && npm run dev
-
-# Terminal 2 (Frontend):
-npm run dev
+npm run dev                    # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-## ✨ Features
-
-- **🤖 AI Chat Interface**: Intelligent conversation capabilities
-- **🔐 Authentication**: Google OAuth + email/password authentication  
-- **📱 Responsive Design**: Optimized for mobile, tablet, and desktop
-- **🎨 Modern UI**: Clean design with smooth animations
-- **⚡ Real-time**: Fast, interactive user experience
-- **🔒 Secure**: JWT tokens, password hashing, email verification
-- **📊 Dashboard**: User management and analytics
-
-## 🏗️ Tech Stack
-
-### Frontend
-- **Next.js 14** - React framework with App Router
-- **TypeScript** - Type safety and better development experience
-- **Tailwind CSS** - Utility-first CSS framework
-- **Zustand** - State management
-- **Framer Motion** - Smooth animations
-
-### Backend  
-- **Node.js** - JavaScript runtime
-- **Express.js** - Web application framework
-- **MongoDB** - NoSQL database
-- **Mongoose** - MongoDB ODM
-- **Passport.js** - Authentication middleware
-- **JWT** - Secure token-based authentication
-
-## 📁 Project Structure
-
-```
-SynapseAI/
-├── src/
-│   ├── app/              # Next.js App Router pages
-│   ├── components/       # Reusable React components
-│   ├── hooks/           # Custom React hooks  
-│   ├── lib/             # Utility functions
-│   └── store/           # State management (Zustand)
-├── backend/
-│   ├── config/          # Database & auth configuration
-│   ├── controllers/     # Route handlers
-│   ├── middleware/      # Custom middleware
-│   ├── models/          # Database models
-│   ├── routes/          # API routes
-│   └── utils/           # Helper functions
-└── public/              # Static assets
-```
-
-## 🔧 Environment Setup
-
-Create `.env.local` in the root directory:
-```env
-NEXT_PUBLIC_API_URL=http://localhost:5000
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
-```
-
-Create `backend/.env`:
-```env
-NODE_ENV=development  
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/synapseai
-JWT_SECRET=your_jwt_secret
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-```
-
-## 📚 Learn More
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API
-- [TypeScript Documentation](https://www.typescriptlang.org/docs/) - TypeScript guides and reference  
-- [Tailwind CSS](https://tailwindcss.com/docs) - utility-first CSS framework
-- [MongoDB Documentation](https://docs.mongodb.com/) - database guides and tutorials
-
-## 🚀 Deployment
-
-The app is configured for easy deployment to:
-
-- **Frontend**: Vercel, Netlify
-- **Backend**: Heroku, Railway, DigitalOcean  
-- **Database**: MongoDB Atlas
-
-## 🤝 Contributing
-
-1. Fork the project
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 📞 Support
-
-For support, email mahdi@synapseai.com or join our Discord community.
-
----
-
-Built with ❤️ by [MahdiGH10](https://github.com/MahdiGH10)
-
-- **Baseline**: 8pxYou can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-- **Scale**: Tailwind CSS spacing scale
-
-## Deploy on Vercel
-
-## 🚀 Getting Started
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-### Prerequisites
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-- Node.js 18.x or higher
-- npm, yarn, or pnpm
-
-### Installation
-
-1. Navigate to the project directory:
-```bash
-cd SynapseAI
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Run the development server:
-```bash
-npm run dev
-```
-
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## 📦 Build for Production
-
-Build the application for production:
+Create the first admin once MongoDB is running:
 
 ```bash
-npm run build
+MONGODB_URI=mongodb://localhost:27017/synapseai node scripts/create-admin.js you@example.com superadmin
 ```
 
-Run the production build:
+The RAG and classifier services are separate Python processes (`RAG_SERVICE_URL`, `CLASSIFIER_SERVICE_URL`). They are **not included in this repository**; chat, auth and the ticket system work without them.
 
-```bash
-npm start
-```
-
-## 🧪 Linting
-
-Run ESLint to check code quality:
-
-```bash
-npm run lint
-```
-
-## 📂 Project Structure
+## Project layout
 
 ```
-SynapseAI/
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx          # Root layout with fonts
-│   │   ├── page.tsx             # Landing page
-│   │   ├── login/
-│   │   │   └── page.tsx         # Login page
-│   │   ├── register/
-│   │   │   └── page.tsx         # Register page
-│   │   └── globals.css          # Global styles
-│   ├── components/
-│   │   ├── Navbar.tsx           # Navigation bar
-│   │   ├── Hero.tsx             # Hero section
-│   │   ├── Features.tsx         # Features section
-│   │   ├── FeatureCard.tsx      # Feature card component
-│   │   ├── Footer.tsx           # Footer component
-│   │   ├── Layout.tsx           # Page layout wrapper
-│   │   └── Icon.tsx             # SVG icon library
-│   └── lib/
-│       ├── animation.ts         # Framer Motion variants
-│       ├── theme.ts             # Theme constants
-│       └── data.ts              # Static data (features, links)
-├── public/                      # Static assets
-├── tailwind.config.ts           # Tailwind configuration
-├── tsconfig.json                # TypeScript configuration
-├── next.config.ts               # Next.js configuration
-├── eslint.config.mjs            # ESLint configuration
-└── package.json                 # Dependencies and scripts
+src/app/api/     chat, gemini, rag, classifier, auth, tickets, notifications, ...
+src/app/         pages (dashboard, smart-chat, workspace, admin, support)
+src/components/  UI components
+src/models/      Mongoose models (User, Chat, Ticket, Post, ...)
+src/lib/         jwt, db, email, llm and classifier clients
+scripts/         admin bootstrap utilities
+docs/            LLM architecture, ticket flow, setup notes
 ```
 
-## 🎯 Components
+## Known limitations (honest status)
 
-### Core Components
+- The `/api/rag/*` routes currently check that an `Authorization` header is **present** but do not verify the JWT. Fix: call `verifyToken` and reject on failure.
+- RAG and classifier microservices are not versioned here; the repo documents their HTTP contract only.
+- No automated tests yet. Next step: Vitest for `lib/` and route handlers, Playwright for the auth flow.
+- Earlier commits contained secrets in `.env.local`. They are removed from the current tree, but remain in git history, so those credentials must be treated as compromised and rotated.
 
-- **Navbar**: Sticky navigation with mobile menu, smooth transitions
-- **Hero**: Eye-catching hero section with animated background and CTAs
-- **Features**: Grid of feature cards with hover effects
-- **FeatureCard**: Reusable card with icon, title, and description
-- **Footer**: Social links, navigation, and copyright
-- **Layout**: Wrapper component for consistent page structure
-- **Icon**: SVG icon library for all icons
+## Author
 
-### Pages
-
-- **Home** (`/`): Landing page with hero and features
-- **Login** (`/login`): Authentication page with glassmorphism card
-- **Register** (`/register`): Registration page with form validation
-
-## 🎨 Customization
-
-### Colors
-
-Edit `tailwind.config.ts` to customize the color palette:
-
-```typescript
-colors: {
-  navy: {
-    DEFAULT: '#1E2A47',
-    dark: '#141d33',
-  },
-  // ... add your colors
-}
-```
-
-### Animations
-
-Modify animation variants in `src/lib/animation.ts`:
-
-```typescript
-export const fadeInUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0 },
-};
-```
-
-### Features
-
-Update feature data in `src/lib/data.ts`:
-
-```typescript
-export const features: Feature[] = [
-  {
-    id: 1,
-    title: 'Your Feature',
-    description: 'Feature description',
-    icon: 'icon-name',
-  },
-];
-```
-
-## ♿ Accessibility
-
-- WCAG AA color contrast compliance
-- Keyboard navigation support
-- Focus-visible states on all interactive elements
-- Semantic HTML structure
-- ARIA labels where necessary
-- Reduced motion support via `prefers-reduced-motion`
-
-## 🌐 Browser Support
-
-- Chrome/Edge (last 2 versions)
-- Firefox (last 2 versions)
-- Safari (last 2 versions)
-- Mobile browsers (iOS Safari, Chrome Android)
-
-## 📱 Responsive Breakpoints
-
-- **Mobile**: < 768px
-- **Tablet**: 768px - 1024px
-- **Desktop**: > 1024px
-- **Wide Desktop**: > 1280px
-
-## 🔧 Tech Stack
-
-- **Framework**: Next.js 15
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Animations**: Framer Motion
-- **Fonts**: Google Fonts (Inter, Poppins)
-- **Linting**: ESLint
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
----
-
-Built with ❤️ by the SynapseAI Team
-=======
-# SYNAPSE-AI
-PROJET NEXT JS
->>>>>>> b76cd372f74abd615f94ea5cc51ab9ed74145ef4
+**Mahdi Gharbi** — software engineering student, AI/automation. [GitHub](https://github.com/MahdiGH10) · [LinkedIn](https://linkedin.com/in/mahdi-gharbi-6891a5273)
